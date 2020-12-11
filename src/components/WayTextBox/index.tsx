@@ -5,11 +5,12 @@ import { DatePicker, Input, InputNumber, Select, Tooltip, Switch, Modal, Space, 
 import moment from 'moment';
 import { isNumber } from 'lodash';
 import { WayFieldAttribute } from '../Attribute'
+import { Item } from 'gg-editor';
 
 
 
 const { RangePicker } = DatePicker;
-
+const { Option } = Select;
 
 export enum TextType {
     Input = "Input",
@@ -183,12 +184,23 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 </DatePicker>);
             }
         case TextType.Switch:
-            return (
-                <Switch
-                    size={'default'}
-                    checked={value}
-                    onChange={setValue}></Switch>
-            );
+            if (props.search) {
+                <Select
+                    size={'middle'}
+                    value={value}
+                    onChange={setValue}
+                >
+                    <Option value={"true"}>是</Option>
+                    <Option value={"false"}>否</Option>
+                </Select>
+            }
+            else
+                return (
+                    <Switch
+                        size={'default'}
+                        checked={value}
+                        onChange={setValue}></Switch>
+                );
         case TextType.Select:
             return (<Select
                 {...defaultProps}

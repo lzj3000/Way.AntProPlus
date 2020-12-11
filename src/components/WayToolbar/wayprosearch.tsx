@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import WayTextBox from '../WayTextBox'
 import { Button, Input, Cascader } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import {SearchWhere} from '../Attribute'
+import { SearchWhere } from '../Attribute'
 
 
 interface CascaderProps {
@@ -36,11 +36,13 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
     { label: "月", value: "month" },
     { label: "周", value: "week" },
     { label: "等于", value: "=" }])
+
     const [value, setValue] = useState('')
     const [nameType, setNameType] = useState({ name: '*', type: 'string', symbol: '' })
     const [searchModel, setSearchModel] = useState(false)
     const [textOption, setTextOption] = useState({
-        style: { width: '50%' }
+        style: { width: '50%' },
+        picker: null
     })
     var option = [{ label: '全部', value: '*' }]
     if (props.fields != undefined) {
@@ -56,8 +58,7 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
                 var field = props.fields?.find((item) => item.field == name)
                 setNameType({ name: name, symbol: value[1], type: field?.type })
                 if (field?.type == "datetime") {
-                    var data = {}
-                    data.style = { width: '50%' }
+                    var data = { ...textOption }
                     if (dateItems.includes(value[1])) {
                         setSearchModel(true)
                         if (value[1] != "===")
@@ -67,6 +68,9 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
                         setSearchModel(false)
                     }
                     setTextOption(data)
+                }
+                if (field?.type == "boolean") {
+                    setSearchModel(true)
                 }
                 setValue('')
             }} />
