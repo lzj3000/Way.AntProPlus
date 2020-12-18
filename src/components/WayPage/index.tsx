@@ -13,9 +13,10 @@ interface WayPageProps {
     title?: string
     model?: ModelAttribute
     result?: ResultData
+    onCommandClick?:(command:string)=>void
 }
 const WayPage: React.FC<WayPageProps> = (props) => {
-    const [title, setTitle] = useState(props.title ?? props.model?.title)
+    const [title, setTitle] = useState(props.title)
     const [values, setValues] = useState(null)
     const [selectCount, setSelectCount] = useState(0)
     var form: FormPlus = null
@@ -96,11 +97,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             </Row>
         )
     }
-    return (<PageHeaderWrapper title={title}
-    // tabList={tablist}
-    // tabProps={{ type: 'line', animated: true }}
-    // onTabChange={setTabIndex}
-    >
+    return (<PageHeaderWrapper title={title}>
         {showTable()}
         {showForm(true)}
     </PageHeaderWrapper>)
@@ -109,10 +106,11 @@ function mapStateToProps(state: any, ownProps: WayPageProps) {
     let innerState = state.waydefault
     if (ownProps.namespace != undefined)
         innerState = state[ownProps.namespace]
-    return {
-        model: innerState.model,
-        result: innerState.result
+    var mstp = { model: innerState.model, result: innerState.result }
+    if (ownProps.title == undefined && mstp.model != null) {
+        mstp.title = mstp.model.title
     }
+    return mstp
 }
 function mapDispatchToProps(dispatch: any, ownProps: WayPageProps) {
     var typens = 'waydefault'

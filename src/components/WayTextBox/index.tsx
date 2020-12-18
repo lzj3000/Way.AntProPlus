@@ -1,16 +1,15 @@
 import React, { useRef } from 'react';
 import useMergeValue from 'use-merge-value';
 
-import { DatePicker, Input, InputNumber, Select, Tooltip, Switch, Modal, Space, Avatar, Divider } from 'antd';
+import { DatePicker, Input, InputNumber, Select, Switch } from 'antd';
 import moment from 'moment';
 import { isNumber } from 'lodash';
 import { WayFieldAttribute } from '../Attribute'
-import { Item } from 'gg-editor';
+
 
 
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
 export enum TextType {
     Input = "Input",
@@ -81,6 +80,11 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
             }
             if (attr.type == "boolean") {
                 textType = TextType.Switch
+                if (props.search) {
+                    textType = TextType.Select
+                    var items: { label: string; value: boolean; }[] = [{ label: '是', value: true }, { label: '否', value: false }]
+                    defaultProps["options"] = items
+                }
             }
             if (attr.comvtp != undefined && attr.comvtp.isvtp) {
                 textType = TextType.Select
@@ -184,23 +188,12 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 </DatePicker>);
             }
         case TextType.Switch:
-            if (props.search) {
-                <Select
-                    size={'middle'}
-                    value={value}
-                    onChange={setValue}
-                >
-                    <Option value={"true"}>是</Option>
-                    <Option value={"false"}>否</Option>
-                </Select>
-            }
-            else
-                return (
-                    <Switch
-                        size={'default'}
-                        checked={value}
-                        onChange={setValue}></Switch>
-                );
+            return (
+                <Switch
+                    size={'default'}
+                    checked={value}
+                    onChange={setValue}></Switch>
+            );
         case TextType.Select:
             return (<Select
                 {...defaultProps}

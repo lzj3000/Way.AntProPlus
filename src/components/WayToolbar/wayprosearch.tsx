@@ -2,16 +2,11 @@ import React, { useState } from 'react';
 import WayTextBox from '../WayTextBox'
 import { Button, Input, Cascader } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { SearchWhere } from '../Attribute'
+import { SearchWhere, WayFieldAttribute } from '../Attribute'
 
 
-interface CascaderProps {
-    field: string,
-    title: string,
-    type: string
-}
 export interface WayProSearchProps {
-    fields?: CascaderProps[],
+    fields?: WayFieldAttribute[],
     onSearch: (w: SearchWhere) => void
 }
 const dateItems = ["===", "year", "quarter", "month", "week"]
@@ -37,7 +32,7 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
     { label: "周", value: "week" },
     { label: "等于", value: "=" }])
 
-    const [value, setValue] = useState('')
+    const [text, setTextChange] = useState({ value: '', attr: { type: 'string' } })
     const [nameType, setNameType] = useState({ name: '*', type: 'string', symbol: '' })
     const [searchModel, setSearchModel] = useState(false)
     const [textOption, setTextOption] = useState({
@@ -57,6 +52,8 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
                 var name = value[0]
                 var field = props.fields?.find((item) => item.field == name)
                 setNameType({ name: name, symbol: value[1], type: field?.type })
+                setTextChange({ value: '', attr: field })
+
                 if (field?.type == "datetime") {
                     var data = { ...textOption }
                     if (dateItems.includes(value[1])) {
@@ -72,11 +69,12 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
                 if (field?.type == "boolean") {
                     setSearchModel(true)
                 }
-                setValue('')
             }} />
-            <WayTextBox options={textOption} search={searchModel} name={nameType.name} attr={{ type: nameType.type }} value={value} onChange={setValue} />
+            <WayTextBox options={textOption} search={searchModel} name={nameType.name} attr={text.attr} value={text.value} onChange={(value) => {
+                setTextChange({ value: value, attr: text.attr })
+            }} />
             <Button style={{ width: '15%' }} type={'primary'} icon={<SearchOutlined />} onClick={() => {
-                props.onSearch({ name: nameType.name, symbol: nameType.symbol, value: value })
+                props.onSearch({ name: nameType.name, symbol: nameType.symbol, value: text.value })
             }}></Button>
         </Input.Group >
     )
