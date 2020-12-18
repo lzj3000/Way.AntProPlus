@@ -3,7 +3,7 @@ import { Form, Row, Col, Card, Modal } from 'antd';
 import { ChildModelAttribute, ModelAttribute, WayFieldAttribute } from '../Attribute'
 import WayTextBox, { WayTextBoxProps } from '../WayTextBox'
 import { FormItemProps, FormInstance } from 'antd/lib/form';
-import { string } from 'prop-types';
+
 
 export interface FormPlus extends FormInstance<any> {
     setFieldDisabled: (fieldName: string, disabled: boolean) => void,
@@ -93,29 +93,28 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
             rules = props.onFieldRules(field, rules)
         return rules
     }
+    const formhtml = () => {
+        return (<Form form={form}
+            scrollToFirstError={true}
+            onFinish={props.onFinish}
+            onFinishFailed={props.onFinishFailed}
+            onFieldsChange={props.onFieldsChange}
+            onValuesChange={props.onValuesChange}
+            initialValues={props.initialValues}
+        ><Row gutter={24}>{setForm()}</Row></Form>)
+    }
+    const childhtml = () => {
+        
+    }
     const html = () => {
         if (props.ismodal) {
             return (<Modal title={title} width={1000} visible={isshow} onCancel={() => setModalShow(false)} onOk={() => {
                 form.submit()
             }}>
-                <Card ><Form form={form}
-                    scrollToFirstError={true}
-                    onFinish={props.onFinish}
-                    onFinishFailed={props.onFinishFailed}
-                    onFieldsChange={props.onFieldsChange}
-                    onValuesChange={props.onValuesChange}
-                    initialValues={props.initialValues}
-                ><Row gutter={24}>{setForm()}</Row></Form></Card>
+                <Card>{formhtml()}</Card>
             </Modal>)
         } else {
-            return (<Card title={title}><Form form={form}
-                scrollToFirstError={true}
-                onFinish={props.onFinish}
-                onFinishFailed={props.onFinishFailed}
-                onFieldsChange={props.onFieldsChange}
-                onValuesChange={props.onValuesChange}
-                initialValues={props.initialValues}
-            ><Row gutter={24}>{setForm()}</Row></Form></Card>)
+            return (<Card title={title}>{formhtml()}</Card>)
         }
     }
     return (

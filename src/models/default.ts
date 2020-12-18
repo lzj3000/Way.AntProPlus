@@ -37,7 +37,6 @@ const WayModel: DefaultModelType = {
         inited(state, action) {
             var obj = { ...state }
             obj.model = action.value
-            console.log(obj)
             return obj
         },
         searched(state, action) {

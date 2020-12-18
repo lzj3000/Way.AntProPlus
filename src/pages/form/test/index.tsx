@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import WayTextBox, { TextType } from '@/components/WayTextBox'
 import WayToolbar from '@/components/WayToolbar'
 import WayForm, { FormPlus } from '@/components/WayForm'
-import { ModelAttribute } from '@/components/Attribute'
+import { ChildModelAttribute, ModelAttribute } from '@/components/Attribute'
 
 import { Divider, Form } from 'antd'
 import WayTable, { TableData } from '@/components/WayTable';
+import WayEditTable from '@/pages/WayPages/components/wayedittable';
 
 export default function Page() {
     const [vs, setStringValue] = useState("HelloWold")
@@ -28,7 +29,19 @@ export default function Page() {
         { command: "test5", name: "测试5", issplit: true, splitname: "save", isselectrow: true },
         { command: "test6", name: "测试6", issplit: true, splitname: "save" },
     ]
-    const [model, setModel] = useState<ModelAttribute>({
+    var r = [
+        { id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3 },
+        { id: 2, name: "X2", age: 27, "born": "2020-12-03", "ismirc": false, "city": 2 },
+        { id: 3, name: "X3", age: 22, "born": "2020-12-03", "ismirc": true, "city": 1 },
+        { id: 4, name: "X4", age: 13, "born": "2020-12-03", "ismirc": false, "city": 0 },
+        { id: 5, name: "X5", age: 22, "born": "2020-12-03", "ismirc": true, "city": 2 },
+        { id: 6, name: "X6", age: 26, "born": "2020-12-03", "ismirc": false, "city": 3 },
+    ]
+    const [model, setModel] = useState<ChildModelAttribute>({
+        isadd: true,
+        isedit: true,
+        isremove: true,
+        ischeck: true,
         fields: [
             { field: 'name', title: '姓名', type: 'string', required: true, visible: true, isedit: true },
             { field: 'age', title: '年龄', type: 'int', required: true, visible: true, pointlength: 2, isedit: true },
@@ -37,7 +50,7 @@ export default function Page() {
             { field: 'city', title: '居住城市', type: 'int', required: true, visible: true, isedit: true, disabled: false, comvtp: { isvtp: true, items: item } }
         ],
         childmodels: [{
-            visible:true,
+            visible: true,
             fields: [
                 { field: 'test', title: 'test', type: 'string', required: true, visible: true, isedit: true }
             ]
@@ -48,6 +61,8 @@ export default function Page() {
     const [values, setValues] = useState(null)
     return (
         <div>
+            <Divider plain>EDITTABLE TEST</Divider>
+            <WayEditTable childmodel={model} data={{ rows: r, total: 100 }}></WayEditTable>
             <Divider plain>TABLE TEST</Divider>
             <WayTable attr={model} data={data} isedit={true} isselect={true} isexpandable={false} onSelectRows={(row, keys, selected) => {
                 if (selected)
@@ -63,14 +78,7 @@ export default function Page() {
                 fields: model.fields,
                 onSearch: (w) => {
                     onCommand('search:' + w.name + w.symbol + w.value)
-                    var r = [
-                        { id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3 },
-                        { id: 2, name: "X2", age: 27, "born": "2020-12-03", "ismirc": false, "city": 2 },
-                        { id: 3, name: "X3", age: 22, "born": "2020-12-03", "ismirc": true, "city": 1 },
-                        { id: 4, name: "X4", age: 13, "born": "2020-12-03", "ismirc": false, "city": 0 },
-                        { id: 5, name: "X5", age: 22, "born": "2020-12-03", "ismirc": true, "city": 2 },
-                        { id: 6, name: "X6", age: 26, "born": "2020-12-03", "ismirc": false, "city": 3 },
-                    ]
+
                     setRows({ rows: r, total: r.length })
                 },
             }} commandShow={true} helpShow={{ isset: true, ishelp: true }} onClick={(name) => {
