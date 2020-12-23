@@ -14,6 +14,7 @@ export interface WayTableProps {
     selectType?: string | "checkbox" | "radio",
     isedit?: boolean,
     isexpandable?: boolean,
+    rowedit?: boolean,
     onFieldRender?: (field: WayFieldAttribute, text: any, record: any) => JSX.Element,
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void,
     onSelectRows?: (row: Object | null, selectedRows: any[], selected: boolean) => void,
@@ -22,28 +23,35 @@ export interface WayTableProps {
     onRowDoubleClick?: (event: React.MouseEvent<HTMLElement, MouseEvent>, row: object) => void,
     onRowMouseEnter?: (event: React.MouseEvent<HTMLElement, MouseEvent>, row: object) => void,
     onMouseLeave?: (event: React.MouseEvent<HTMLElement, MouseEvent>, row: object) => void,
+    onRowDataChangeing?: (row: any, field: string, value: any) => boolean,
 }
 
 
 const WayTable: React.FC<WayTableProps> = (props) => {
     const [loading, setLoading] = useState(props.loading ?? false)
     const [data, setData] = useState(props.data ?? { rows: [], total: 0 })
-    const [rowedit, setRowedit] = useState(false)
+    const [rowedit, setRowedit] = useState(props.rowedit ?? false)
 
     useEffect(() => {
-        console.log("useEffect")
         setData(props.data ?? { rows: [], total: 0 })
         setSelectedRowKeys([])
     }, [props.data])
+    useEffect(() => {
+        setRowedit(props.rowedit)
+    }, [props.rowedit])
     function getcolumns(attr: ModelAttribute) {
         var cols = []
         attr?.fields?.filter((field) => field.visible).forEach((item) => {
             cols.push({
                 dataIndex: item.field, title: item.title, sorter: true, render: (text: any, record: any) => {
+                    if (record == undefined) return
                     if (rowedit && record.editable) {
                         const [rv, setrv] = useState(record[item.field])
                         return <WayTextBox value={rv} onChange={(value) => {
                             setrv((v) => {
+                                if (props.onRowDataChangeing != undefined) {
+                                    if (!props.onRowDataChangeing(record, item.field, value)) return value
+                                }
                                 record[item.field] = value
                                 return value
                             })
@@ -102,12 +110,10 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         setData(data)
     }
     function getsort(sort: SorterResult<any>): string {
-        console.log(sort)
         if (sort.column == undefined) return ''
         var ss = sort.field
         if (sort.order == "descend")
             ss = ss + " desc"
-        console.log(ss)
         return ss
     }
     const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([])

@@ -162,7 +162,6 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
             prop.text = ""
         }
         console.log(prop);
-        
         return prop
     }
     function setTypeAndIcon(prop: any) {

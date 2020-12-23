@@ -6,7 +6,7 @@ import { ChildModelAttribute, ModelAttribute } from '@/components/Attribute'
 
 import { Divider, Form } from 'antd'
 import WayTable, { TableData } from '@/components/WayTable';
-import WayEditTable from '@/pages/WayPages/components/wayedittable';
+import WayEditTable from '@/components/WayForm/edittable';
 
 export default function Page() {
     const [vs, setStringValue] = useState("HelloWold")
@@ -62,8 +62,8 @@ export default function Page() {
     return (
         <div>
             <Divider plain>EDITTABLE TEST</Divider>
-            <WayEditTable childmodel={model} data={{ rows: r, total: 100 }}></WayEditTable>
-            <Divider plain>TABLE TEST</Divider>
+            <WayEditTable model={model} data={{ rows: r, total: 100 }} iscirclebutton={true}></WayEditTable>
+            {/* <Divider plain>TABLE TEST</Divider>
             <WayTable attr={model} data={data} isedit={true} isselect={true} isexpandable={false} onSelectRows={(row, keys, selected) => {
                 if (selected)
                     form.setFieldsValue(row)
@@ -117,7 +117,7 @@ export default function Page() {
             <div>{String(sn) + "---" + item.get(sn)}</div>
             <WayTextBox value={dttext} onChange={setDtTest} attr={ttt} disabled={bn} ></WayTextBox>
             <div>{String(dttext)}</div>
-            <WayTextBox disabled={!bn} value={dn} onChange={setDateValue} textType={TextType.DatePicker} ></WayTextBox>
+            <WayTextBox disabled={!bn} value={dn} onChange={setDateValue} textType={TextType.DatePicker} ></WayTextBox> */}
         </div>
     );
 }
