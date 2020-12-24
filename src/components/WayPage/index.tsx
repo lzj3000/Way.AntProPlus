@@ -13,10 +13,9 @@ interface WayPageProps {
     title?: string
     model?: ModelAttribute
     result?: ResultData
-    onCommandClick?:(command:string)=>void
+    onCommandClick?: (command: string) => void
 }
 const WayPage: React.FC<WayPageProps> = (props) => {
-    const [title, setTitle] = useState(props.title)
     const [values, setValues] = useState(null)
     const [selectCount, setSelectCount] = useState(0)
     var form: FormPlus = null
@@ -55,7 +54,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                             if (form != null && name == 'add') {
                                 form.resetFields()
                             }
-                            form.setTitle(title + "-" + command.text)
+                            form.setTitle(props.title + "-" + command.text)
                             form.show()
                         } else {
                             props.execute(command)
@@ -92,12 +91,12 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         return (
             <Row gutter={[16, 16]}>
                 <Col span={24}>
-                    <WayForm attr={props.model} title={title} ismodal={modal} onFinish={setValues} onInitFormed={(f) => { form = f }}></WayForm>
+                    <WayForm attr={props.model} title={props.title} ismodal={modal} onFinish={setValues} onInitFormed={(f) => { form = f }}></WayForm>
                 </Col>
             </Row>
         )
     }
-    return (<PageHeaderWrapper title={title}>
+    return (<PageHeaderWrapper title={props.title}>
         {showTable()}
         {showForm(true)}
     </PageHeaderWrapper>)
@@ -106,8 +105,8 @@ function mapStateToProps(state: any, ownProps: WayPageProps) {
     let innerState = state.waydefault
     if (ownProps.namespace != undefined)
         innerState = state[ownProps.namespace]
-    var mstp = { model: innerState.model, result: innerState.result }
-    if (ownProps.title == undefined && mstp.model != null) {
+    var mstp = { model: innerState.model, result: innerState.result, title: ownProps.title }
+    if (mstp.title == undefined && mstp.model != null) {
         mstp.title = mstp.model.title
     }
     return mstp

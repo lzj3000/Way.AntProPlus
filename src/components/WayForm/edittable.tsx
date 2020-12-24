@@ -45,6 +45,7 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
             <WayToolbar iscircle={props.iscirclebutton} commandShow={true} selectcount={selectKeys.length} attrs={coms}
                 onClick={(name: string, command: CommandAttribute) => {
                     if (name == "add") {
+                        console.log('Edittable.add')
                         var row = { id: moment().valueOf(), isnew: true, editable: true }
                         props.model?.fields?.forEach(field => {
                             if (field.field != undefined)
@@ -54,8 +55,8 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                             if (!props.onAddRowing(row)) return
                         }
                         var rows = [row, ...data.rows]
-                        setData({ rows: rows, total: data.total + 1 })
                         setRowEdit(true)
+                        setData({ rows: rows, total: data.total + 1 })
                         if (props.onAdded != undefined) {
                             props.onAdded(row)
                         }
@@ -121,6 +122,11 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                         return props.onEditRowing(row, field, value)
                     }
                     return true
+                }}
+                onRowDoubleClick={(event:any, record:any) => {
+                    if (record.editable != undefined) {
+                        setRowEdit(record.editable)
+                    }
                 }}
             ></WayTable></Col></Row>
     </>)

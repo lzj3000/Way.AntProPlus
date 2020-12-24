@@ -37,6 +37,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         setSelectedRowKeys([])
     }, [props.data])
     useEffect(() => {
+        console.log('WayTable.useEffect.rowedit' + "=" + String(props.rowedit))
         setRowedit(props.rowedit)
     }, [props.rowedit])
     function getcolumns(attr: ModelAttribute) {
@@ -182,7 +183,18 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     function setrowedit(record) {
         if (props.isedit) {
             record.editable = !rowedit
+            console.log(String(record.editable))
+            var rows = [...data.rows]
+            rows.forEach(r => {
+                if (r.id == record.id) {
+                    r.editable = !rowedit
+                } else {
+                    if (r.editable)
+                        r.editable = false
+                }
+            })
             setRowedit(!rowedit)
+            // setData({ rows: rows, total: data.total })
         }
     }
     function expandable(): ExpandableConfig<Object> | undefined {
@@ -233,7 +245,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
                             props.onRowClick(event, record)
                         }
                     }
-                }, // 点击行
+                }, // 双点击行
                 onDoubleClick: event => {
                     event.stopPropagation()
                     setrowedit(record)

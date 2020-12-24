@@ -59,10 +59,42 @@ export default function Page() {
     const [data, setRows] = useState<TableData>({ rows: [], total: 0 })
     var form: FormPlus = null
     const [values, setValues] = useState(null)
+    const [edittable, setEditTable] = useState({
+        add: '',
+        edit: '',
+        remove: ''
+    })
     return (
         <div>
+            <div>{edittable.add}</div>
+            <div>{edittable.edit}</div>
+            <div>{edittable.remove}</div>
             <Divider plain>EDITTABLE TEST</Divider>
-            <WayEditTable model={model} data={{ rows: r, total: 100 }} iscirclebutton={true}></WayEditTable>
+            <WayEditTable model={model} data={{ rows: r, total: 100 }} iscirclebutton={true}
+                onAddRowing={(row) => {
+                    var data=Object.assign({},edittable,{add:'onAddRowing'})
+                    setEditTable(data)
+                    return true
+                }}
+                onAdded={(row) => {
+                    var data=Object.assign({},edittable,{add:'onAdded'})
+                    setEditTable(data)
+                }}
+                onEditRowing={(row, field, value) => {
+                    var data=Object.assign({},edittable,{edit:'onEditRowing'})
+                    setEditTable(data)
+                    return true
+                }}
+                onRemoveRowing={(row) => {
+                    var data=Object.assign({},edittable,{remove:'onRemoveRowing'})
+                    setEditTable(data)
+                    return true
+                }}
+                onRemoveed={(row) => {
+                    var data=Object.assign({},edittable,{remove:'onRemoveed'})
+                    setEditTable(data)
+                }}
+            ></WayEditTable>
             {/* <Divider plain>TABLE TEST</Divider>
             <WayTable attr={model} data={data} isedit={true} isselect={true} isexpandable={false} onSelectRows={(row, keys, selected) => {
                 if (selected)
