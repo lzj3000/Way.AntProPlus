@@ -18,6 +18,7 @@ export interface WayToolbarProps {
     iscircle?: boolean,
     isselectrow?: boolean,
     selectcount?: number,
+    isclosecard?: boolean,
     onClick?: (name: string, command: CommandAttribute) => void,
     onCommandDisabled?: (command: CommandAttribute) => boolean,
 }
@@ -191,6 +192,13 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
         itmes.push(<Row justify="end"><Col>{inithelps()}</Col></Row>)
     }
     if (itmes.length == 3) {
+        if (props.isclosecard) {
+            return (<Row gutter={[8, 8]}>
+                <Col span={12}>{itmes[0]}</Col>
+                <Col span={10}>{itmes[1]}</Col>
+                <Col span={2} >{itmes[2]}</Col>
+            </Row>)
+        }
         return (<Card><Row gutter={[8, 8]}>
             <Col span={12}>{itmes[0]}</Col>
             <Col span={10}>{itmes[1]}</Col>
@@ -198,12 +206,21 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
         </Row></Card>)
     }
     if (itmes.length == 2) {
+        if (props.isclosecard) {
+            return (<Row gutter={[8, 8]}>
+                <Col span={12}>{itmes[0]}</Col>
+                <Col span={12}>{itmes[1]}</Col>
+            </Row>)
+        }
         return (<Card><Row gutter={[8, 8]}>
             <Col span={12}>{itmes[0]}</Col>
             <Col span={12}>{itmes[1]}</Col>
         </Row></Card>)
     }
     if (itmes.length == 1) {
+        if (props.isclosecard) {
+            return (<Row gutter={[8, 8]}><Col span={24}>{itmes[0]}</Col></Row>)
+        }
         return (<Card><Row gutter={[8, 8]}><Col span={24}>{itmes[0]}</Col></Row></Card>)
     }
     return (<></>)

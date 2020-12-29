@@ -1,10 +1,12 @@
+import { map } from "lodash";
+
 export default {
     'POST /api/test/init': {
         title: "测试模型",
         commands: [
             { command: "add", name: "新增" },
             { command: "edit", name: "编辑", isselectrow: true },
-            { command: "remove", name: "删除", isselectrow: true, isalert: true,selectmultiple:true },
+            { command: "remove", name: "删除", isselectrow: true, isalert: true, selectmultiple: true },
             { command: "test1", name: "测试1", isselectrow: true },
             { command: "save", name: "保存" },
             { command: "get", name: "获取" },
@@ -20,9 +22,16 @@ export default {
             { field: 'city', title: '居住城市', type: 'int', required: true, visible: true, isedit: true, disabled: false, comvtp: { isvtp: true, items: [[0, '北京'], [1, '上海'], [2, '深圳'], [3, '成都']] } }
         ],
         childmodels: [{
+            name: 'cars',
+            title: '拥有车辆',
             visible: true,
+            isadd:true,
+            isedit:true,
+            isremove:true,
             fields: [
-                { field: 'test', title: 'test', type: 'string', required: true, visible: true, isedit: true }
+                { field: 'brand', title: '品牌', type: 'string', visible: true, isedit: true },
+                { field: 'type', title: '类型', type: 'string', visible: true, isedit: true },
+                { field: 'oldage', title: '年份', type: 'string', visible: true, isedit: true }
             ]
         }]
     },
@@ -32,7 +41,10 @@ export default {
         statusText: "test",
         result: {
             rows: [
-                { id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3 },
+                { id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3 ,cars:[
+                    {brand:'雪铁龙',type:"C4",oldage:'2009'},
+                    {brand:'现代',type:"T6",oldage:'2012'}
+                ]},
                 { id: 2, name: "X2", age: 27, "born": "2020-12-03", "ismirc": false, "city": 2 },
                 { id: 3, name: "X3", age: 22, "born": "2020-12-03", "ismirc": true, "city": 1 },
                 { id: 4, name: "X4", age: 13, "born": "2020-12-03", "ismirc": false, "city": 0 },

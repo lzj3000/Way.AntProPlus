@@ -57,7 +57,7 @@ export default function Page() {
         }]
     })
     const [data, setRows] = useState<TableData>({ rows: [], total: 0 })
-    var form: FormPlus = null
+    var form: FormPlus
     const [values, setValues] = useState(null)
     const [edittable, setEditTable] = useState({
         add: '',
@@ -70,40 +70,42 @@ export default function Page() {
             <div>{edittable.edit}</div>
             <div>{edittable.remove}</div>
             <Divider plain>EDITTABLE TEST</Divider>
-            <WayEditTable model={model} data={{ rows: r, total: 100 }} iscirclebutton={true}
+            <WayEditTable model={model} data={data} iscirclebutton={true} onSearchData={(item) => {
+                setRows({ rows: r, total: r.length })
+            }}
                 onAddRowing={(row) => {
-                    var data=Object.assign({},edittable,{add:'onAddRowing'})
+                    var data = Object.assign({}, edittable, { add: 'onAddRowing' })
                     setEditTable(data)
                     return true
                 }}
                 onAdded={(row) => {
-                    var data=Object.assign({},edittable,{add:'onAdded'})
+                    var data = Object.assign({}, edittable, { add: 'onAdded' })
                     setEditTable(data)
                 }}
                 onEditRowing={(row, field, value) => {
-                    var data=Object.assign({},edittable,{edit:'onEditRowing'})
+                    var data = Object.assign({}, edittable, { edit: 'onEditRowing' })
                     setEditTable(data)
                     return true
                 }}
                 onRemoveRowing={(row) => {
-                    var data=Object.assign({},edittable,{remove:'onRemoveRowing'})
+                    var data = Object.assign({}, edittable, { remove: 'onRemoveRowing' })
                     setEditTable(data)
                     return true
                 }}
                 onRemoveed={(row) => {
-                    var data=Object.assign({},edittable,{remove:'onRemoveed'})
+                    var data = Object.assign({}, edittable, { remove: 'onRemoveed' })
                     setEditTable(data)
                 }}
             ></WayEditTable>
-            {/* <Divider plain>TABLE TEST</Divider>
+            <Divider plain>TABLE TEST</Divider>
             <WayTable attr={model} data={data} isedit={true} isselect={true} isexpandable={false} onSelectRows={(row, keys, selected) => {
                 if (selected)
-                    form.setFieldsValue(row)
+                    setValues(row) //form.setFieldsValue(row)
                 else
-                    form.resetFields()
+                    setValues(undefined)// form.resetFields()
             }}></WayTable>
             <Divider plain>FORM TEST</Divider>
-            <WayForm attr={model} onFinish={setValues} onInitFormed={(f) => { form = f }}></WayForm>
+            <WayForm attr={model} onFinish={setValues} values={values} ></WayForm>
             <div>{JSON.stringify(values)}</div>
             <Divider plain>BUTTON TEST</Divider>
             <WayToolbar searchShow={{
@@ -149,7 +151,7 @@ export default function Page() {
             <div>{String(sn) + "---" + item.get(sn)}</div>
             <WayTextBox value={dttext} onChange={setDtTest} attr={ttt} disabled={bn} ></WayTextBox>
             <div>{String(dttext)}</div>
-            <WayTextBox disabled={!bn} value={dn} onChange={setDateValue} textType={TextType.DatePicker} ></WayTextBox> */}
+            <WayTextBox disabled={!bn} value={dn} onChange={setDateValue} textType={TextType.DatePicker} ></WayTextBox>
         </div>
     );
 }

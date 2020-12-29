@@ -1,43 +1,56 @@
-import React, { useState } from 'react';
-import { Form, Row, Col, Card, Modal } from 'antd';
-import { ChildModelAttribute, ModelAttribute, WayFieldAttribute } from '../Attribute'
+import React, { useEffect, useState } from 'react';
+import { Form, Row, Col, Card, Modal, Tabs } from 'antd';
+import { ChildModelAttribute, ModelAttribute, SearchItem, TableData, WayFieldAttribute } from '../Attribute'
 import WayTextBox, { WayTextBoxProps } from '../WayTextBox'
 import { FormItemProps, FormInstance } from 'antd/lib/form';
+import WayEditTable from './edittable';
 
+
+const TabPane = Tabs.TabPane
 
 export interface FormPlus extends FormInstance<any> {
     setFieldDisabled: (fieldName: string, disabled: boolean) => void,
     setTitle: (title: string) => void,
+    setValues: (values: any) => void,
     show: () => void,
+    clear: () => void,
 }
 
 interface WayFromProps {
     attr: ModelAttribute
-    from?: FormPlus
     title?: string
     ismodal?: boolean
     modaltype?: string | 'modal' | 'drawer'
-    isshow?: boolean
+    isshow?: boolean,
+    values?: any,
     onInitItem?: (field: WayFieldAttribute, item: FormItemProps) => void
     onInitTextBox?: (field: WayFieldAttribute, txtprops: WayTextBoxProps) => void,
     onInitChildItems?: (model: ChildModelAttribute, item: FormItemProps) => void,
     onInitFormed?: (form: FormPlus) => void,
-    initialValues?: any,
     onFinish?: (values: any) => void,
     onFinishFailed?: (errorInfo: any) => void,
     onFieldsChange?: (changedFields: any[], allFields: any[]) => void,
     onValuesChange?: (changedValues: any, values: any) => void,
-    onFieldRules?: (field: WayFieldAttribute, rules: any[]) => []
+    onFieldRules?: (field: WayFieldAttribute, rules: any[]) => [],
+    onSearchData?: (item: SearchItem) => TableData
 }
 
 const WayFrom: React.FC<WayFromProps> = (props) => {
-    const [form] = Form.useForm(props.from)
+    const [form] = Form.useForm()
     const [title, setTitle] = useState(props.title)
     const [isshow, setModalShow] = useState(props.isshow ?? false)
     const [formModel, setFormModel] = useState({
         items: props.attr.fields?.filter((field) => { return field.visible && field.isedit }),
         models: props.attr.childmodels?.filter((m) => { return m.visible })
     })
+    const [edittable, setEditTable] = useState<TableData>({ rows: [], total: 0 })
+    useEffect(() => {
+        if (props.values != undefined) {
+            setFormValues(props.values)
+        } else {
+            clearFormValues()
+        }
+    }, [props.values])
     function setForm() {
         const children: JSX.Element[] = [];
         formModel.items?.forEach((field) => {
@@ -68,19 +81,39 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
             form.show = () => {
                 setModalShow(true)
             }
+            form.setValues = (values: any) => {
+                setFormValues(values)
+            }
+            form.clear = () => {
+                clearFormValues()
+            }
             props.onInitFormed(form)
         }
         return children
+    }
+    function setFormValues(values: any) {
+        form.setFieldsValue(values)
+        if (formModel.models != undefined && formModel.models?.length > 0) {
+            var cm = formModel.models[0]
+            if (values[cm.name] != undefined) {
+                var rows = values[cm.name]
+                setEditTable({ rows: rows, total: rows.length })
+            }
+        }
+    }
+    function clearFormValues() {
+        form.resetFields()
+        setEditTable(null)
     }
     function fieldToItemProps(model: ModelAttribute, field: WayFieldAttribute): FormItemProps {
         var item: FormItemProps = {}
         item.name = field.field
         item.label = field.title
+        if (!field.disabled)
+            item.rules = fieldGetRules(field)
         if (props.onInitItem != undefined) {
             props.onInitItem(field, item)
         }
-        if (!field.disabled)
-            item.rules = fieldGetRules(field)
         return item
     }
     function fieldGetRules(field: WayFieldAttribute) {
@@ -95,16 +128,48 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
     }
     const formhtml = () => {
         return (<Form form={form}
-            scrollToFirstError={true}
             onFinish={props.onFinish}
-            onFinishFailed={props.onFinishFailed}
-            onFieldsChange={props.onFieldsChange}
-            onValuesChange={props.onValuesChange}
-            initialValues={props.initialValues}
+            scrollToFirstError={true}
+            initialValues={props.values}
         ><Row gutter={24}>{setForm()}</Row></Form>)
     }
     const childhtml = () => {
-        
+        if (formModel.models != undefined && formModel.models?.length > 0) {
+            return (<Tabs defaultActiveKey={"0"} onChange={(actioveKey) => {
+
+            }}>
+                {formModel.models?.map((cm, index) => {
+                    return (
+                        <TabPane tab={cm.title} key={index}>
+                            <WayEditTable model={cm} data={edittable} iscirclebutton={true} closetoolbar={false} onSearchData={(item) => {
+                                if (props.onSearchData != undefined) {
+                                    item.parent = form.getFieldsValue()
+                                    item.childmodel = cm
+                                    var data = props.onSearchData(item)
+                                    setEditTable(data)
+                                }
+                            }}
+                                onAddRowing={(row) => {
+                                    return true
+                                }}
+                                onAdded={(row) => {
+
+                                }}
+                                onEditRowing={(row, field, value) => {
+                                    return true
+                                }}
+                                onRemoveRowing={(row) => {
+                                    return true
+                                }}
+                                onRemoveed={(row) => {
+
+                                }}
+                            ></WayEditTable>
+                        </TabPane>
+                    )
+                })}
+            </Tabs>)
+        }
     }
     const html = () => {
         if (props.ismodal) {
@@ -112,9 +177,10 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
                 form.submit()
             }}>
                 <Card>{formhtml()}</Card>
+                {childhtml()}
             </Modal>)
         } else {
-            return (<Card title={title}>{formhtml()}</Card>)
+            return (<><Card title={title}>{formhtml()}</Card>{childhtml()}</>)
         }
     }
     return (

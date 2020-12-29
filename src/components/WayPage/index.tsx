@@ -51,11 +51,14 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                     helpShow={{ isset: true, ishelp: true }}
                     onClick={(name: string, command: CommandAttribute) => {
                         if (name == 'edit' || name == 'add') {
-                            if (form != null && name == 'add') {
-                                form.resetFields()
+                            if (form != null) {
+                                form.clear()
                             }
                             form.setTitle(props.title + "-" + command.text)
                             form.show()
+                            if(name=='edit'){
+                                form.setValues(values)
+                            }
                         } else {
                             props.execute(command)
                         }
@@ -70,7 +73,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                     }}
                 ></WayToolbar></Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>
-                <WayTable attr={props.model} data={props.result?.result} isselect={true}
+                <WayTable attr={props.model} data={props.result?.result} isselect={true} isexpandable={true}
                     onSelectRows={(row, keys, selected) => {
                         setSelectCount(keys.length)
                         if (selected)

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Table } from 'antd';
+import { Button, Card, Table, Tabs } from 'antd';
 import { ChildModelAttribute, ModelAttribute, WayFieldAttribute, SearchItem, TableData } from '../Attribute'
 import { ExpandableConfig, SorterResult, TablePaginationConfig } from 'antd/lib/table/interface';
 import { isArray } from 'lodash';
@@ -15,6 +15,7 @@ export interface WayTableProps {
     isedit?: boolean,
     isexpandable?: boolean,
     rowedit?: boolean,
+    isclosecard?: boolean,
     onFieldRender?: (field: WayFieldAttribute, text: any, record: any) => JSX.Element,
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void,
     onSelectRows?: (row: Object | null, selectedRows: any[], selected: boolean) => void,
@@ -26,6 +27,7 @@ export interface WayTableProps {
     onRowDataChangeing?: (row: any, field: string, value: any) => boolean,
 }
 
+const TabPane = Tabs.TabPane
 
 const WayTable: React.FC<WayTableProps> = (props) => {
     const [loading, setLoading] = useState(props.loading ?? false)
@@ -199,73 +201,88 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     }
     function expandable(): ExpandableConfig<Object> | undefined {
         if (props.isexpandable) {
-            var cm = props.attr.childmodels[0]
             return {
                 onExpand: (expanded: any, record: any) => { },
-                expandedRowRender: (record: any) => <WayTable attr={cm} onSearchData={(item) => {
-                }}></WayTable>
+                expandedRowRender: expandedRowRender
             }
         }
         return undefined
     }
     const expandedRowRender = (record: any) => {
-        return <WayTable attr={props.attr.childmodels[0]} isselect={false}></WayTable>
+        if (props?.attr?.childmodels != undefined && props.attr.childmodels.length > 0) {
+            return (<Tabs defaultActiveKey={"0"} >
+                {
+                    props.attr.childmodels.map((cm, index) => {
+                        return (
+                            <TabPane tab={cm.title} key={index}>
+                                <WayTable attr={cm} isselect={false} isclosecard={true} data={{ rows: record[cm.name], total: record[cm.name]?.length ?? 0 }} isedit={false}></WayTable>
+                            </TabPane>
+                        )
+                    })
+                }
+            </Tabs>)
+        }
     }
-    return (<Card><Table
-        bordered={true}
-        rowKey="id"
-        columns={getcolumns(props.attr)}
-        rowSelection={rowSelection()}
-        dataSource={data.rows}
-        pagination={{ current: 1, pageSize: 10, total: data.total }}
-        loading={loading}
-        expandable={expandable()}
-        onChange={handleTableChange}
-        onRow={record => {
-            return {
-                onClick: event => {
-                    event.stopPropagation()
-                    try {
-                        if (rowSelection()?.type == "radio")
-                            onSelectChange([record.id], [record])
-                        if (rowSelection()?.type == "checkbox") {
-                            var id = record.id
-                            var keys = []
-                            if (selectedRowKeys.includes(id)) {
-                                keys = selectedRowKeys.filter(key => key != id)
-                            } else {
-                                keys = [...selectedRowKeys]
-                                keys.push(id)
+    function getTable() {
+        return (<Table
+            bordered={true}
+            rowKey="id"
+            columns={getcolumns(props.attr)}
+            rowSelection={rowSelection()}
+            dataSource={data.rows}
+            pagination={{ current: 1, pageSize: 10, total: data.total }}
+            loading={loading}
+            expandable={expandable()}
+            onChange={handleTableChange}
+            onRow={record => {
+                return {
+                    onClick: event => {
+                        event.stopPropagation()
+                        try {
+                            if (rowSelection()?.type == "radio")
+                                onSelectChange([record.id], [record])
+                            if (rowSelection()?.type == "checkbox") {
+                                var id = record.id
+                                var keys = []
+                                if (selectedRowKeys.includes(id)) {
+                                    keys = selectedRowKeys.filter(key => key != id)
+                                } else {
+                                    keys = [...selectedRowKeys]
+                                    keys.push(id)
+                                }
+                                onSelectChange(keys, [record])
                             }
-                            onSelectChange(keys, [record])
                         }
-                    }
-                    finally {
-                        if (props.onRowClick) {
-                            props.onRowClick(event, record)
+                        finally {
+                            if (props.onRowClick) {
+                                props.onRowClick(event, record)
+                            }
                         }
-                    }
-                }, // 双点击行
-                onDoubleClick: event => {
-                    event.stopPropagation()
-                    setrowedit(record)
-                    if (props.onRowDoubleClick) {
-                        props.onRowDoubleClick(event, record)
-                    }
-                },
-                onMouseEnter: event => {
-                    if (props.onRowMouseEnter) {
-                        props.onRowMouseEnter(event, record)
-                    }
-                }, // 鼠标移入行
-                onMouseLeave: event => {
-                    if (props.onMouseLeave) {
-                        props.onMouseLeave(event, record)
-                    }
-                },
-            };
-        }}
-    /></Card>)
+                    }, // 双点击行
+                    onDoubleClick: event => {
+                        event.stopPropagation()
+                        setrowedit(record)
+                        if (props.onRowDoubleClick) {
+                            props.onRowDoubleClick(event, record)
+                        }
+                    },
+                    onMouseEnter: event => {
+                        if (props.onRowMouseEnter) {
+                            props.onRowMouseEnter(event, record)
+                        }
+                    }, // 鼠标移入行
+                    onMouseLeave: event => {
+                        if (props.onMouseLeave) {
+                            props.onMouseLeave(event, record)
+                        }
+                    },
+                };
+            }}
+        />)
+    }
+    if (props.isclosecard)
+        return (getTable())
+    return (<Card>{getTable()}</Card>)
 }
 
 export default WayTable;

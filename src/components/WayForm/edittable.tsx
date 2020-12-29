@@ -1,5 +1,5 @@
-import { Col, Row } from "antd"
-import React, { useState } from "react"
+import { Card, Col, Row } from "antd"
+import React, { useEffect, useState } from "react"
 import { ChildModelAttribute, CommandAttribute, SearchItem, SearchWhere, TableData } from "../Attribute"
 import WayTable from "../WayTable"
 import WayToolbar from "../WayToolbar"
@@ -9,6 +9,7 @@ interface WayEditTableProps {
     model?: ChildModelAttribute,
     data?: TableData,
     iscirclebutton?: boolean,
+    closetoolbar?: boolean,
     onSearchData?: (item: SearchItem) => void
     onAddRowing?: (row: any) => boolean,
     onAdded?: (row: any) => void,
@@ -22,6 +23,9 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     const [rowedit, setRowEdit] = useState(false)
     const [data, setData] = useState<TableData | undefined>(props.data)
     const [coms, setToolbar] = useState<CommandAttribute[]>(getcmds())
+    useEffect(() => {
+        setData(props.data)
+    }, [props.data])
     var searchItem: SearchItem = {
         page: 1,
         size: 10,
@@ -40,9 +44,10 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
         }
         return mm
     }
-    return (<>
-        <Row gutter={[16, 16]}><Col span={24}>
-            <WayToolbar iscircle={props.iscirclebutton} commandShow={true} selectcount={selectKeys.length} attrs={coms}
+    function getToolbar() {
+        if (props.closetoolbar) return
+        return (
+            <WayToolbar iscircle={props.iscirclebutton} commandShow={true} selectcount={selectKeys.length} attrs={coms} isclosecard={true}
                 onClick={(name: string, command: CommandAttribute) => {
                     if (name == "add") {
                         console.log('Edittable.add')
@@ -54,9 +59,15 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                         if (props.onAddRowing != undefined) {
                             if (!props.onAddRowing(row)) return
                         }
-                        var rows = [row, ...data.rows]
+                        var oldrows = []
+                        var total = 1
+                        if (data != undefined) {
+                            oldrows = [...data.rows]
+                            total = data.total + total
+                        }
+                        var rows = [row, ...oldrows]
                         setRowEdit(true)
-                        setData({ rows: rows, total: data.total + 1 })
+                        setData({ rows: rows, total: total })
                         if (props.onAdded != undefined) {
                             props.onAdded(row)
                         }
@@ -99,36 +110,40 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                         }
                     }
                 }}
-            ></WayToolbar></Col></Row>
-        <Row gutter={[16, 16]}><Col span={24}>
-            <WayTable attr={props.model} data={data} isselect={props.model?.ischeck} isedit={true} rowedit={rowedit}
-                onSelectRows={(row, keys, selected) => {
-                    setSelectKeys(keys)
-                    if (selected)
-                        setSelectRow(row)
-                    else
-                        setSelectRow(null)
-                }}
-                onSearchData={(item) => {
-                    searchItem.page = item.page
-                    searchItem.size = item.size
-                    searchItem.sortList = item.sortList
-                    if (props.onSearchData != undefined) {
-                        props.onSearchData(searchItem)
-                    }
-                }}
-                onRowDataChangeing={(row, field, value) => {
-                    if (props.onEditRowing != undefined) {
-                        return props.onEditRowing(row, field, value)
-                    }
-                    return true
-                }}
-                onRowDoubleClick={(event:any, record:any) => {
-                    if (record.editable != undefined) {
-                        setRowEdit(record.editable)
-                    }
-                }}
-            ></WayTable></Col></Row>
-    </>)
+            ></WayToolbar>
+        )
+    }
+    return (<Card>
+        {getToolbar()}
+        <WayTable attr={props.model} data={data} isedit={true} rowedit={rowedit} isselect={true}
+            isclosecard={true}
+            onSelectRows={(row, keys, selected) => {
+                setSelectKeys(keys)
+                if (selected)
+                    setSelectRow(row)
+                else
+                    setSelectRow(null)
+            }}
+            onSearchData={(item) => {
+                searchItem.page = item.page
+                searchItem.size = item.size
+                searchItem.sortList = item.sortList
+                if (props.onSearchData != undefined) {
+                    props.onSearchData(searchItem)
+                }
+            }}
+            onRowDataChangeing={(row, field, value) => {
+                if (props.onEditRowing != undefined) {
+                    return props.onEditRowing(row, field, value)
+                }
+                return true
+            }}
+            onRowDoubleClick={(event: any, record: any) => {
+                if (record.editable != undefined) {
+                    setRowEdit(record.editable)
+                }
+            }}
+        ></WayTable>
+    </Card>)
 }
 export default WayEditTable;

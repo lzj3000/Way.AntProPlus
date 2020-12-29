@@ -3,7 +3,7 @@ import useMergeValue from 'use-merge-value';
 
 import { DatePicker, Input, InputNumber, Select, Switch } from 'antd';
 import moment from 'moment';
-import { isNumber } from 'lodash';
+import { isMap, isNumber } from 'lodash';
 import { WayFieldAttribute } from '../Attribute'
 
 
@@ -89,6 +89,8 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
             if (attr.comvtp != undefined && attr.comvtp.isvtp) {
                 textType = TextType.Select
                 var items: { label: string; value: number; }[] = []
+                if (!isMap(attr.comvtp.items))
+                    attr.comvtp.items = new Map(attr.comvtp.items)
                 attr.comvtp.items.forEach((v, k) => {
                     items.push({ label: v, value: k })
                 })

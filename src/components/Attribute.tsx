@@ -20,7 +20,7 @@ export interface WayFieldAttribute {
 export interface ComboxAttribute {
     isvtp: boolean;
     multiple?: boolean;
-    items: Map<number, string>;
+    items: Map<number,string>;
     eventrow?: any;
 }
 export interface ForeignAttribute {
@@ -78,6 +78,8 @@ export interface SearchWhere {
     value: string
 }
 export interface SearchItem {
+    parent:any,
+    childmodel:ChildModelAttribute,
     page: number,
     size: number,
     whereList: SearchWhere[],
