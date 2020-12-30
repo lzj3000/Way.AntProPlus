@@ -56,7 +56,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                             }
                             form.setTitle(props.title + "-" + command.text)
                             form.show()
-                            if(name=='edit'){
+                            if (name == 'edit') {
                                 form.setValues(values)
                             }
                         } else {
@@ -78,13 +78,18 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                         setSelectCount(keys.length)
                         if (selected)
                             setValues(row)
-                        else
-                            setValues(null)
+                        else {
+                            if (keys.length == 1) {
+                                var r = props.result?.result.rows.find(r => r.id == keys[0])
+                                setValues(r)
+                            } else
+                                setValues(null)
+                        }
                     }}
                     onSearchData={(item) => {
-                        searchItem.page = item.page
-                        searchItem.size = item.size
-                        searchItem.sortList = item.sortList
+                        for (var n in item) {
+                            searchItem[n] = item[n]
+                        }
                         searchData()
                     }}
                 ></WayTable></Col></Row>

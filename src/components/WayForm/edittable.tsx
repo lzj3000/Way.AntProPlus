@@ -10,7 +10,7 @@ interface WayEditTableProps {
     data?: TableData,
     iscirclebutton?: boolean,
     closetoolbar?: boolean,
-    onSearchData?: (item: SearchItem) => void
+    onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
     onAddRowing?: (row: any) => boolean,
     onAdded?: (row: any) => void,
     onEditRowing?: (row: any, field: string, value: any) => boolean,
@@ -106,7 +106,9 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                         searchItem.whereList[w]
                         searchItem.page = 1
                         if (props.onSearchData != undefined) {
-                            props.onSearchData(searchItem)
+                            props.onSearchData(searchItem, (data: TableData) => {
+                                setData(data)
+                            })
                         }
                     }
                 }}
@@ -129,7 +131,9 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                 searchItem.size = item.size
                 searchItem.sortList = item.sortList
                 if (props.onSearchData != undefined) {
-                    props.onSearchData(searchItem)
+                    props.onSearchData(searchItem, (data: TableData) => {
+                        setData(data)
+                    })
                 }
             }}
             onRowDataChangeing={(row, field, value) => {

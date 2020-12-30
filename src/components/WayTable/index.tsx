@@ -16,6 +16,7 @@ export interface WayTableProps {
     isexpandable?: boolean,
     rowedit?: boolean,
     isclosecard?: boolean,
+    onExpandable?: (attr: ChildModelAttribute) => ExpandableConfig<Object>
     onFieldRender?: (field: WayFieldAttribute, text: any, record: any) => JSX.Element,
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void,
     onSelectRows?: (row: Object | null, selectedRows: any[], selected: boolean) => void,
@@ -33,7 +34,6 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     const [loading, setLoading] = useState(props.loading ?? false)
     const [data, setData] = useState(props.data ?? { rows: [], total: 0 })
     const [rowedit, setRowedit] = useState(props.rowedit ?? false)
-
     useEffect(() => {
         setData(props.data ?? { rows: [], total: 0 })
         setSelectedRowKeys([])
@@ -83,7 +83,6 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             var item: SearchItem = {
                 page: pagination.current ?? 1,
                 size: pagination.pageSize ?? 10,
-                whereList: [],
                 sortList: [],
             }
 
@@ -101,14 +100,14 @@ const WayTable: React.FC<WayTableProps> = (props) => {
                 }
             }
             if (props.onSearchData != undefined) {
-                props.onSearchData(item, setRow)
+                props.onSearchData(item, setLoaded)
             }
         }
         finally {
             setLoading(false)
         }
     }
-    const setRow = (data: TableData) => {
+    const setLoaded = (data: TableData) => {
         setLoading(false)
         setData(data)
     }
@@ -196,26 +195,65 @@ const WayTable: React.FC<WayTableProps> = (props) => {
                 }
             })
             setRowedit(!rowedit)
-            // setData({ rows: rows, total: data.total })
         }
     }
     function expandable(): ExpandableConfig<Object> | undefined {
         if (props.isexpandable) {
-            return {
-                onExpand: (expanded: any, record: any) => { },
-                expandedRowRender: expandedRowRender
+            if (props.onExpandable == undefined) {
+                return {
+                    onExpand: (expanded: any, record: any) => {
+                        if (!expanded) return
+                        if (props?.attr?.childmodels != undefined && props.attr.childmodels.length > 0) {
+                            var cm = props?.attr?.childmodels[0]
+                            if (!redord[cm.name]) {
+                                record[cm.name] = []
+                            }
+                            record[cm.name].total = record[cm.name].length
+                            if (record[cm.name].total == 0) {
+                                var item: SearchItem = { page: 1, size: 10 }
+                                getchildTable(item, cm, record)
+                            }
+                        }
+                    },
+                    expandedRowRender: expandedRowRender
+                }
+            } else {
+                return props.onExpandable(props.attr)
             }
         }
         return undefined
     }
+    function getchildTable(item: SearchItem, cm: ChildModelAttribute, record: any) {
+        item.childmodel = cm
+        item.parent = record
+        if (props.onSearchData != undefined) {
+            props.onSearchData(item, (cmdata: TableData) => {
+                var rows = [...data.rows]
+                rows.forEach((r) => {
+                    if (r.id == record.id) {
+                        r[cm.name] = cmdata.rows
+                        r[cm.name].total = cmdata.total
+                    }
+                })
+                setData({ rows: rows, total: data.total })
+            })
+        }
+    }
     const expandedRowRender = (record: any) => {
         if (props?.attr?.childmodels != undefined && props.attr.childmodels.length > 0) {
-            return (<Tabs defaultActiveKey={"0"} >
+            return (<Tabs defaultActiveKey={"0"}>
                 {
                     props.attr.childmodels.map((cm, index) => {
+                        if (!record[cm.name])
+                            record[cm.name] = []
+                        record[cm.name].total = record[cm.name].length
                         return (
                             <TabPane tab={cm.title} key={index}>
-                                <WayTable attr={cm} isselect={false} isclosecard={true} data={{ rows: record[cm.name], total: record[cm.name]?.length ?? 0 }} isedit={false}></WayTable>
+                                <WayTable key={"id"} attr={cm} isselect={false} isclosecard={true} data={{ rows: record[cm.name], total: record[cm.name].total }}
+                                    isedit={false} onSearchData={((item: SearchItem) => {
+                                        getchildTable(item, cm, record)
+                                    })}
+                                ></WayTable>
                             </TabPane>
                         )
                     })
