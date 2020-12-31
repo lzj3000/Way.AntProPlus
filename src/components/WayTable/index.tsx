@@ -205,7 +205,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
                         if (!expanded) return
                         if (props?.attr?.childmodels != undefined && props.attr.childmodels.length > 0) {
                             var cm = props?.attr?.childmodels[0]
-                            if (!redord[cm.name]) {
+                            if (!record[cm.name]) {
                                 record[cm.name] = []
                             }
                             record[cm.name].total = record[cm.name].length

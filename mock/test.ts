@@ -37,6 +37,8 @@ export default {
         {
             name: 'family',
             title: "家庭成员",
+            visible:true,
+            isadd:true,
             fields: [
                 { field: 'name', title: '称呼', type: 'string', visible: true },
                 { field: 'count', title: '数量', type: 'int', visible: true }

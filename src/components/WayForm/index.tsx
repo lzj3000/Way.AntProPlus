@@ -4,6 +4,8 @@ import { ChildModelAttribute, ModelAttribute, SearchItem, TableData, WayFieldAtt
 import WayTextBox, { WayTextBoxProps } from '../WayTextBox'
 import { FormItemProps, FormInstance } from 'antd/lib/form';
 import WayEditTable from './edittable';
+import { values } from 'lodash';
+import { bool, number } from 'prop-types';
 
 
 const TabPane = Tabs.TabPane
@@ -14,6 +16,8 @@ export interface FormPlus extends FormInstance<any> {
     setValues: (values: any) => void,
     show: () => void,
     clear: () => void,
+    setHideSearch: (isshow: boolean) => void,
+    setHideToolbar: (isshow: boolean) => void
 }
 
 interface WayFromProps {
@@ -28,11 +32,8 @@ interface WayFromProps {
     onInitChildItems?: (model: ChildModelAttribute, item: FormItemProps) => void,
     onInitFormed?: (form: FormPlus) => void,
     onFinish?: (values: any) => void,
-    onFinishFailed?: (errorInfo: any) => void,
-    onFieldsChange?: (changedFields: any[], allFields: any[]) => void,
-    onValuesChange?: (changedValues: any, values: any) => void,
     onFieldRules?: (field: WayFieldAttribute, rules: any[]) => [],
-    onSearchData?: (item: SearchItem) => TableData
+    onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
 }
 
 const WayFrom: React.FC<WayFromProps> = (props) => {
@@ -43,10 +44,12 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
         items: props.attr.fields?.filter((field) => { return field.visible && field.isedit }),
         models: props.attr.childmodels?.filter((m) => { return m.visible })
     })
-    const [edittable, setEditTable] = useState<TableData>({ rows: [], total: 0 })
+    const [values, setValues] = useState(() => setFormValues(props.values))
+    const [closeToolbar, setCloseToolbar] = useState(false)
+    const [closeSearch, setCloseSearch] = useState(false)
     useEffect(() => {
         if (props.values != undefined) {
-            setFormValues(props.values)
+            setValues(setFormValues(props.values))
         } else {
             clearFormValues()
         }
@@ -82,28 +85,49 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
                 setModalShow(true)
             }
             form.setValues = (values: any) => {
-                setFormValues(values)
+                setValues(setFormValues(values))
             }
             form.clear = () => {
                 clearFormValues()
+            }
+            form.setHideSearch = (isshow: Boolean) => {
+                setCloseSearch(isshow)
+            }
+            form.setHideToolbar = (isshow: Boolean) => {
+                setCloseToolbar(isshow)
             }
             props.onInitFormed(form)
         }
         return children
     }
     function setFormValues(values: any) {
+        if (values == undefined)
+            values = {}
         form.setFieldsValue(values)
         if (formModel.models != undefined && formModel.models?.length > 0) {
-            var cm = formModel.models[0]
-            if (values[cm.name] != undefined) {
-                var rows = values[cm.name]
-                setEditTable({ rows: rows, total: rows.length })
-            }
+            formModel.models.forEach((cm) => {
+                if (!values[cm.name]) {
+                    values[cm.name] = []
+                    values[cm.name].total = 0
+                } else {
+                    values[cm.name].total = values[cm.name].length
+                }
+                cm.removeRows = []
+            })
         }
+        return values
     }
+
     function clearFormValues() {
         form.resetFields()
-        setEditTable(null)
+        var old = {}
+        formModel.models?.forEach((cm) => {
+            if (!old[cm.name]) {
+                old[cm.name] = []
+                old[cm.name].total = 0
+            }
+        })
+        setValues(old)
     }
     function fieldToItemProps(model: ModelAttribute, field: WayFieldAttribute): FormItemProps {
         var item: FormItemProps = {}
@@ -128,41 +152,56 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
     }
     const formhtml = () => {
         return (<Form form={form}
-            onFinish={props.onFinish}
+            onFinish={(formvalues) => {
+                var res = Object.assign({}, values)
+                for (var n in formvalues)
+                    res[n] = formvalues[n]
+                if (formModel.models != undefined && formModel.models?.length > 0) {
+                    formModel.models.forEach((cm) => {
+                        if (cm.removeRows.length > 0) {
+                            cm.removeRows.forEach((rr) => {
+                                rr.state = 3
+                                res[cm.name].push(rr)
+                            })
+                        }
+                    })
+                }
+                console.log(res)
+                if (props.onFinish != undefined) {
+                    props.onFinish(res)
+                }
+            }}
             scrollToFirstError={true}
             initialValues={props.values}
         ><Row gutter={24}>{setForm()}</Row></Form>)
     }
     const childhtml = () => {
         if (formModel.models != undefined && formModel.models?.length > 0) {
-            return (<Tabs defaultActiveKey={"0"} onChange={(actioveKey) => {
-
-            }}>
+            return (<Tabs defaultActiveKey={"0"}>
                 {formModel.models?.map((cm, index) => {
                     return (
                         <TabPane tab={cm.title} key={index}>
-                            <WayEditTable model={cm} data={edittable} iscirclebutton={true} closetoolbar={false} onSearchData={(item) => {
+                            <WayEditTable model={cm} data={{ rows: values[cm.name], total: values[cm.name].total }} iscirclebutton={true} closetoolbar={closeToolbar} closesearch={closeSearch} onSearchData={(item) => {
                                 if (props.onSearchData != undefined) {
                                     item.parent = form.getFieldsValue()
                                     item.childmodel = cm
-                                    var data = props.onSearchData(item)
-                                    setEditTable(data)
+                                    props.onSearchData(item, (data: TableData) => {
+                                        var row = Object.assign({}, values)
+                                        row[cm.name] = data.rows
+                                        row[cm.name].total = data.total
+                                        setValues(row)
+                                    })
                                 }
                             }}
-                                onAddRowing={(row) => {
-                                    return true
-                                }}
-                                onAdded={(row) => {
-
-                                }}
-                                onEditRowing={(row, field, value) => {
-                                    return true
-                                }}
-                                onRemoveRowing={(row) => {
-                                    return true
-                                }}
-                                onRemoveed={(row) => {
-
+                                onDataChange={(data, row, type) => {
+                                    var vvv = Object.assign({}, values)
+                                    vvv[cm.name] = data.rows
+                                    vvv[cm.name].total = data.total
+                                    if (type == 'remove') {
+                                        row.forEach((r) => { cm.removeRows.push(r) })
+                                    }
+                                    setValues(vvv)
+                                    
                                 }}
                             ></WayEditTable>
                         </TabPane>

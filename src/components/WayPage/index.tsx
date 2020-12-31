@@ -54,10 +54,12 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                             if (form != null) {
                                 form.clear()
                             }
+                            form.setHideSearch(true)
                             form.setTitle(props.title + "-" + command.text)
                             form.show()
                             if (name == 'edit') {
                                 form.setValues(values)
+                                form.setHideSearch(false)
                             }
                         } else {
                             props.execute(command)

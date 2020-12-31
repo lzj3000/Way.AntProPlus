@@ -10,6 +10,7 @@ import { WayFieldAttribute } from '../Attribute'
 
 
 const { RangePicker } = DatePicker;
+const { Search } = Input;
 
 export enum TextType {
     Input = "Input",
@@ -34,8 +35,10 @@ export interface WayTextBoxProps {
     value?: any;
     disabled?: boolean;
     options?: any;
+    width?: string;
     onChange?: (value: any) => void;
     onPressEnter?: (value: any) => void;
+    onSearch?: (value: any) => void;
 }
 const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
     const inputRef = useRef<Input | null>(null);
@@ -63,13 +66,12 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
             defaultProps[n] = props.options[n]
         }
     }
+    if (props.width != undefined)
+        defaultProps.style.width = props.width
     var { textType, attr } = props
     setTextType(attr);
     function setTextType(attr: WayFieldAttribute | undefined) {
         if (attr != undefined) {
-            if (attr.foreign != undefined && attr.foreign.isfkey) {
-                textType = TextType.Search
-            }
             if (attr.type == "int" || attr.type == "int32" || attr.type == "int64" || attr.type == "decimal") {
                 textType = TextType.InputNumber
                 if (attr.pointlength != undefined && attr.pointlength > 0)
@@ -95,6 +97,9 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                     items.push({ label: v, value: k })
                 })
                 defaultProps["options"] = items
+            }
+            if (attr.foreign != undefined && attr.foreign.isfkey) {
+                textType = TextType.Search
             }
             if (attr.length != undefined && attr.length != 500)
                 defaultProps.maxLength = attr.length
@@ -204,6 +209,18 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 onChange={setValue}
             >
             </Select>);
+        case TextType.Search:
+            return (<Search
+                {...defaultProps}
+                size={'middle'}
+                value={value}
+                onSearch={(value) => {
+                    if (props.onSearch != undefined) {
+                        props.onSearch(value)
+                    }
+                }}
+            >
+            </Search>)
     }
     return (<Input
         ref={inputRef}

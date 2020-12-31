@@ -10,12 +10,14 @@ interface WayEditTableProps {
     data?: TableData,
     iscirclebutton?: boolean,
     closetoolbar?: boolean,
+    closesearch?: boolean
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
     onAddRowing?: (row: any) => boolean,
     onAdded?: (row: any) => void,
     onEditRowing?: (row: any, field: string, value: any) => boolean,
     onRemoveRowing?: (row: any) => boolean,
     onRemoveed?: (row: any) => void,
+    onDataChange?: (data: TableData, row: any, changeType: string | 'add' | 'edit' | 'remove') => void,
 }
 const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     const [selectKeys, setSelectKeys] = useState([])
@@ -50,7 +52,6 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
             <WayToolbar iscircle={props.iscirclebutton} commandShow={true} selectcount={selectKeys.length} attrs={coms} isclosecard={true}
                 onClick={(name: string, command: CommandAttribute) => {
                     if (name == "add") {
-                        console.log('Edittable.add')
                         var row = { id: moment().valueOf(), isnew: true, editable: true }
                         props.model?.fields?.forEach(field => {
                             if (field.field != undefined)
@@ -71,10 +72,14 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                         if (props.onAdded != undefined) {
                             props.onAdded(row)
                         }
+                        if (props.onDataChange != undefined) {
+                            props.onDataChange({ rows: rows, total: total }, row, 'add')
+                        }
                     }
                     if (name == "remove") {
                         if (selectKeys.length > 0) {
                             var oldid: Number[] = []
+                            var rerows: any[] = []
                             var rows = [...data.rows]
                             selectKeys.forEach(id => {
                                 if (id != undefined) {
@@ -92,15 +97,20 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                                     })
                                     var drow = rows.splice(index, 1)
                                     if (props.onRemoveed != undefined) {
-                                        props.onRemoveed(drow)
+                                        props.onRemoveed(drow[0])
                                     }
+                                    rerows.push(drow[0])
                                 }
                             })
-                            setData({ rows: rows, total: data.total - 1 })
+                            var ndata = { rows: rows, total: data.total - 1 }
+                            setData(ndata)
+                            if (props.onDataChange != undefined) {
+                                props.onDataChange(ndata, rerows, 'remove')
+                            }
                         }
                     }
                 }}
-                searchShow={{
+                searchShow={(props.closesearch) ? false : {
                     fields: props.model?.fields,
                     onSearch: (w: SearchWhere) => {
                         searchItem.whereList[w]
@@ -139,6 +149,9 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
             onRowDataChangeing={(row, field, value) => {
                 if (props.onEditRowing != undefined) {
                     return props.onEditRowing(row, field, value)
+                }
+                if (!row.isnew && props.onDataChange != undefined) {
+                    props.onDataChange(data, row, 'edit')
                 }
                 return true
             }}
