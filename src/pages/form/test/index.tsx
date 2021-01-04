@@ -136,22 +136,22 @@ export default function Page() {
             <WayToolbar commandShow={true} iscircle={true} attrs={buttons}></WayToolbar>
             <div>{comm}</div>
             <Divider plain>TEXTBOX TEST</Divider>
-            <WayTextBox value={vs} onChange={setStringValue} ></WayTextBox>
+            <WayTextBox value={vs}  width={'50%'} onChange={setStringValue} ></WayTextBox>
             <div>{vs}</div>
-            <WayTextBox value={vn} onChange={setNumberValue} attr={{ type: "int" }} ></WayTextBox>
+            <WayTextBox value={vn}  width={'50%'} onChange={setNumberValue} attr={{ type: "int" }} ></WayTextBox>
             <div>{vn}</div>
-            <WayTextBox value={dn} onChange={setDateValue} attr={{ type: "datetime" }} ></WayTextBox>
+            <WayTextBox value={dn} width={'50%'} onChange={setDateValue} attr={{ type: "datetime" }} ></WayTextBox>
             <div>{dn}</div>
-            <WayTextBox value={bn} onChange={setBoolValue} attr={{ type: "boolean" }} ></WayTextBox>
+            <WayTextBox value={bn} width={'50%'} onChange={setBoolValue} attr={{ type: "boolean" }} ></WayTextBox>
             <div>{String(bn)}</div>
-            <WayTextBox value={sn} onChange={(v) => {
+            <WayTextBox width={'50%'} value={sn} onChange={(v) => {
                 setSelectValue(v)
                 setTestValue({ type: item.get(v) })
             }} attr={{ type: "string", comvtp: { isvtp: true, items: item } }} ></WayTextBox>
             <div>{String(sn) + "---" + item.get(sn)}</div>
-            <WayTextBox value={dttext} onChange={setDtTest} attr={ttt} disabled={bn} ></WayTextBox>
+            <WayTextBox value={dttext}  width={'50%'} onChange={setDtTest} attr={ttt} disabled={bn} ></WayTextBox>
             <div>{String(dttext)}</div>
-            <WayTextBox disabled={!bn} value={dn} onChange={setDateValue} textType={TextType.DatePicker} ></WayTextBox>
+            <WayTextBox disabled={!bn} width={'50%'} value={dn} onChange={setDateValue} textType={TextType.DatePicker} ></WayTextBox>
         </div>
     );
 }

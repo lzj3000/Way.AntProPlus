@@ -54,11 +54,11 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         allowClear: true,
         placeholder: '',
         disabled: props.disabled ?? false,
-        style: { width: '100%' },
-        onPressEnter: (event: any) => {
-            if (props.onPressEnter != undefined)
-                props.onPressEnter(event.currentTarget.value)
-        }
+        style: { width: '100%' }
+        // onPressEnter: (event: any) => {
+        //     if (props.onPressEnter != undefined)
+        //         props.onPressEnter(event.currentTarget.value)
+        // }
 
     }
     for (var n in defaultProps) {

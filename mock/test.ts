@@ -19,7 +19,9 @@ export default {
             { field: 'age', title: '年龄', type: 'int', required: true, visible: true, pointlength: 2, isedit: true },
             { field: 'born', title: '出生日期', type: 'datetime', visible: true, isedit: true },
             { field: 'ismirc', title: '是否已婚', type: 'boolean', required: true, visible: true, isedit: true },
-            { field: 'city', title: '居住城市', type: 'int', required: true, visible: true, isedit: true, disabled: false, comvtp: { isvtp: true, items: [[0, '北京'], [1, '上海'], [2, '深圳'], [3, '成都']] } }
+            { field: 'city', title: '居住城市', type: 'int', required: true, visible: true, isedit: true, disabled: false, comvtp: { isvtp: true, items: [[0, '北京'], [1, '上海'], [2, '深圳'], [3, '成都']] } },
+            { field: 'thing', title: '梦想', type: 'int', required: true, visible: true, isedit: true,
+            foreign:{isfkey:true,OneObjecFiled:"id",} }
         ],
         childmodels: [{
             name: 'cars',
