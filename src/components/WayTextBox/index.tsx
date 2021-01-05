@@ -1,10 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import useMergeValue from 'use-merge-value';
 
 import { DatePicker, Input, InputNumber, Select, Switch } from 'antd';
 import moment from 'moment';
 import { isMap, isNumber } from 'lodash';
-import { WayFieldAttribute } from '../Attribute'
+import { ModelAttribute, SearchItem, TableData, WayFieldAttribute } from '../Attribute'
+import WayEditTable from '../WayForm/edittable';
 
 
 
@@ -38,14 +39,26 @@ export interface WayTextBoxProps {
     width?: string;
     onChange?: (value: any) => void;
     onPressEnter?: (value: any) => void;
-    onSearch?: (value: any) => void;
+    onSearchBefore?: (item: SearchItem, callback: (model: ModelAttribute, data: TableData) => void) => void
+    onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
 }
 const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
+    const [value, setValue] = useMergeValue<any | undefined>(props.defaultValue, {
+        value: anyToObject(props.value),
+        onChange: (value, prevValue) => {
+            if (props.onChange != undefined) {
+                props.onChange(anyToString(value))
+            }
+        },
+    });
+    const [searchModal, setSearchModal] = useState({
+        isshow: false,
+        model: undefined,
+        data: undefined
+    })
     const inputRef = useRef<Input | null>(null);
     const defaultProps = {
         autoFocus: false,
-        addonAfter: '',
-        addonBefore: '',
         maxLength: 500,
         prefix: '',
         size: 'middle',
@@ -54,7 +67,8 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         allowClear: true,
         placeholder: '',
         disabled: props.disabled ?? false,
-        style: { width: '100%' }
+        style: { width: '100%' },
+        ref: inputRef
         // onPressEnter: (event: any) => {
         //     if (props.onPressEnter != undefined)
         //         props.onPressEnter(event.currentTarget.value)
@@ -106,6 +120,9 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
             if (props.disabled == undefined && attr.disabled != undefined) {
                 defaultProps.disabled = attr.disabled
             }
+            if (props.search) {
+                defaultProps.disabled = false
+            }
         }
         if (textType == undefined) {
             textType = TextType.Input;
@@ -156,18 +173,10 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         }
         return value
     }
-    const [value, setValue] = useMergeValue<any | undefined>(props.defaultValue, {
-        value: anyToObject(props.value),
-        onChange: (value, prevValue) => {
-            if (props.onChange != undefined) {
-                props.onChange(anyToString(value))
-            }
-        },
-    });
+
     switch (textType) {
         case TextType.InputNumber:
             return (<InputNumber
-                ref={inputRef}
                 {...defaultProps}
                 size={'middle'}
                 value={value}
@@ -177,11 +186,9 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         case TextType.DatePicker:
             if (props.search) {
                 return (<RangePicker
+                    {...defaultProps}
                     size={'middle'}
-                    picker={"date"}
                     value={value}
-                    disabled={props.disabled}
-                    style={defaultProps.style}
                     picker={props.options?.picker}
                     onChange={setValue}>
                 </RangePicker>);
@@ -210,20 +217,32 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
             >
             </Select>);
         case TextType.Search:
-            return (<Search
+            return (<><Search
                 {...defaultProps}
                 size={'middle'}
                 value={value}
                 onSearch={(value) => {
-                    if (props.onSearch != undefined) {
-                        props.onSearch(value)
+                    if (props.onSearchBefore != undefined) {
+                        var item = { foreign: attr?.foreign, value: value }
+                        console.log("textbox.onSearchBefore")
+                        console.log(item)
+                        props.onSearchBefore(item)
                     }
                 }}
             >
-            </Search>)
+            </Search>
+                <WayEditTable ismodal={true} modelshow={searchModal.isshow} model={attr?.foreign?.model} data={attr?.foreign?.data} commandShow={false}
+                    onSearchData={(item: SearchItem) => {
+                        item.foreign = attr?.foreign
+                        item.value = value
+                        if (props.onSearchData != undefined) {
+                            props.onSearchData(item)
+                        }
+                    }}
+                ></WayEditTable></>
+            )
     }
     return (<Input
-        ref={inputRef}
         {...defaultProps}
         size={'middle'}
         value={value}

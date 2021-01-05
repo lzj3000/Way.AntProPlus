@@ -15,6 +15,7 @@ export default function Page() {
     const [bn, setBoolValue] = useState(true)
     const [sn, setSelectValue] = useState(1)
     var item = new Map([[0, '北京'], [1, '上海'], [2, '深圳'], [3, '成都']])
+    var typeitem = new Map([[0, 'int'], [1, 'datetime'], [2, 'boolean'], [3, 'string']])
     const [ttt, setTestValue] = useState({ type: "string" })
     var [dttext, setDtTest] = useState(null)
     var [comm, onCommand] = useState("")
@@ -112,7 +113,6 @@ export default function Page() {
                 fields: model.fields,
                 onSearch: (w) => {
                     onCommand('search:' + w.name + w.symbol + w.value)
-
                     setRows({ rows: r, total: r.length })
                 },
             }} commandShow={true} helpShow={{ isset: true, ishelp: true }} onClick={(name) => {
@@ -146,9 +146,9 @@ export default function Page() {
             <div>{String(bn)}</div>
             <WayTextBox width={'50%'} value={sn} onChange={(v) => {
                 setSelectValue(v)
-                setTestValue({ type: item.get(v) })
-            }} attr={{ type: "string", comvtp: { isvtp: true, items: item } }} ></WayTextBox>
-            <div>{String(sn) + "---" + item.get(sn)}</div>
+                setTestValue({ type: typeitem.get(v) })
+            }} attr={{ type: "string", comvtp: { isvtp: true, items:typeitem } }} ></WayTextBox>
+            <div>{String(sn) + "---" + typeitem.get(sn)}</div>
             <WayTextBox value={dttext}  width={'50%'} onChange={setDtTest} attr={ttt} disabled={bn} ></WayTextBox>
             <div>{String(dttext)}</div>
             <WayTextBox disabled={!bn} width={'50%'} value={dn} onChange={setDateValue} textType={TextType.DatePicker} ></WayTextBox>

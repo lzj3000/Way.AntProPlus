@@ -20,7 +20,7 @@ export interface WayFieldAttribute {
 export interface ComboxAttribute {
     isvtp: boolean;
     multiple?: boolean;
-    items: Map<number,string>;
+    items: Map<number, string>;
     eventrow?: any;
 }
 export interface ForeignAttribute {
@@ -39,6 +39,8 @@ export interface ForeignAttribute {
     MapItems: Map<string, string>;// 主外键对象对应关系，keys中one对象属性名称、Values中为many对象属性名称
     eventrow: any;// 激活外键的主数据行
     isassociate: boolean;// 是否子关联外键
+    model?: ModelAttribute
+    data?: TableData
 }
 export interface ModelAttribute {
     name?: string,
@@ -63,7 +65,8 @@ export interface CommandAttribute {
     disabled?: boolean,
     visible?: boolean,
     onclick?: string,
-    icon?: string
+    icon?: string,
+    hander?: () => void
 }
 export interface ChildModelAttribute extends ModelAttribute {
     isadd?: boolean,
@@ -78,12 +81,15 @@ export interface SearchWhere {
     value: string
 }
 export interface SearchItem {
-    parent:any,
-    childmodel:ChildModelAttribute,
+    field?: WayFieldAttribute
+    foreign?: ForeignAttribute
+    parent?: any,
+    childmodel?: ChildModelAttribute,
     page: number,
     size: number,
-    whereList: SearchWhere[],
-    sortList: string[],
+    whereList?: SearchWhere[],
+    sortList?: string[],
+    value?: any
 }
 export interface TableData {
     rows: any[],

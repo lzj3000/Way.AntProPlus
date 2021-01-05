@@ -1,5 +1,13 @@
-import { map } from "lodash";
+import { SearchItem } from '@/components/Attribute';
+import { Request, Response } from 'express';
 
+const waitTime = (time: number = 100) => {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(true);
+        }, time);
+    });
+};
 export default {
     'POST /api/test/init': {
         title: "测试模型",
@@ -20,8 +28,10 @@ export default {
             { field: 'born', title: '出生日期', type: 'datetime', visible: true, isedit: true },
             { field: 'ismirc', title: '是否已婚', type: 'boolean', required: true, visible: true, isedit: true },
             { field: 'city', title: '居住城市', type: 'int', required: true, visible: true, isedit: true, disabled: false, comvtp: { isvtp: true, items: [[0, '北京'], [1, '上海'], [2, '深圳'], [3, '成都']] } },
-            { field: 'thing', title: '梦想', type: 'int', required: true, visible: true, isedit: true,
-            foreign:{isfkey:true,OneObjecFiled:"id",} }
+            {
+                field: 'thing', title: '梦想', type: 'int', required: true, visible: true, isedit: true,
+                foreign: { isfkey: true, OneObjecFiled: "id", }
+            }
         ],
         childmodels: [{
             name: 'cars',
@@ -39,8 +49,8 @@ export default {
         {
             name: 'family',
             title: "家庭成员",
-            visible:true,
-            isadd:true,
+            visible: true,
+            isadd: true,
             fields: [
                 { field: 'name', title: '称呼', type: 'string', visible: true },
                 { field: 'count', title: '数量', type: 'int', visible: true }
@@ -48,28 +58,57 @@ export default {
         }
         ]
     },
-    'POST /api/test/search': {
-        success: true,
-        code: 200,
-        statusText: "test",
-        result: {
-            rows: [
-                {
-                    id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3, cars: [
-                        { id: 1, brand: '雪铁龙', type: "C4", oldage: '2009' },
-                        { id: 2, brand: '现代', type: "T6", oldage: '2012' }
-                    ], family: [
-                        { id: 1, name: '哥哥', count: 2 },
-                        { id: 2, name: '姐姐', count: 1 },
-                    ]
-                },
-                { id: 2, name: "X2", age: 27, "born": "2020-12-03", "ismirc": false, "city": 2 },
-                { id: 3, name: "X3", age: 22, "born": "2020-12-03", "ismirc": true, "city": 1 },
-                { id: 4, name: "X4", age: 13, "born": "2020-12-03", "ismirc": false, "city": 0 },
-                { id: 5, name: "X5", age: 22, "born": "2020-12-03", "ismirc": true, "city": 2 },
-                { id: 6, name: "X6", age: 26, "born": "2020-12-03", "ismirc": false, "city": 3 },
-            ],
-            total: 300
+    'POST /api/test/search': (req: Request, res: Response) => {
+        console.log(req)
+        var item: SearchItem = req.body
+        console.log(item)
+        if (item.field && item.foreign) {
+            res.send({
+                success: true,
+                code: 200,
+                result: {
+                    model: {
+                        name: 'family',
+                        title: "家庭成员",
+                        visible: true,
+                        isadd: true,
+                        fields: [
+                            { field: 'name', title: '称呼', type: 'string', visible: true },
+                            { field: 'count', title: '数量', type: 'int', visible: true }
+                        ]
+                    },
+                    data: {
+                        rows: [
+                            { id: 1, name: '哥哥', count: 2 },
+                            { id: 2, name: '姐姐', count: 1 },
+                        ], total: 2
+                    }
+                }
+            });
+            return
         }
-    },
+        return res.send({
+            success: true,
+            code: 200,
+            result: {
+                rows: [
+                    {
+                        id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3, cars: [
+                            { id: 1, brand: '雪铁龙', type: "C4", oldage: '2009' },
+                            { id: 2, brand: '现代', type: "T6", oldage: '2012' }
+                        ], family: [
+                            { id: 1, name: '哥哥', count: 2 },
+                            { id: 2, name: '姐姐', count: 1 },
+                        ]
+                    },
+                    { id: 2, name: "X2", age: 27, "born": "2020-12-03", "ismirc": false, "city": 2 },
+                    { id: 3, name: "X3", age: 22, "born": "2020-12-03", "ismirc": true, "city": 1 },
+                    { id: 4, name: "X4", age: 13, "born": "2020-12-03", "ismirc": false, "city": 0 },
+                    { id: 5, name: "X5", age: 22, "born": "2020-12-03", "ismirc": true, "city": 2 },
+                    { id: 6, name: "X6", age: 26, "born": "2020-12-03", "ismirc": false, "city": 3 },
+                ],
+                total: 300
+            }
+        })
+    }
 }

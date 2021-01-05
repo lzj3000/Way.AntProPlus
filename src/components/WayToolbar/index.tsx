@@ -66,23 +66,23 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
                 mianButtons.push(attr)
             }
         })
-        return (<Space wrap>{
+        return (<Space>{
             mianButtons.map((attr) => {
                 if (splitButtons.has(attr.command)) {
                     const menu = (
                         <Menu>
                             {
                                 splitButtons.get(attr.command)?.map((sattr, i) => {
-                                    return (<Menu.Item key={i}><WayButton {...attrToButtonProps(sattr)} onClick={onClick} toolbar={props}></WayButton></Menu.Item>)
+                                    return (<Menu.Item key={i}><WayButton {...attrToButtonProps(sattr)} onClick={() => onClick(sattr.command, sattr)} toolbar={props}></WayButton></Menu.Item>)
                                 })
                             }
                         </Menu>
                     );
                     return (
-                        <WayButton {...attrToButtonProps(attr)} icon={<DownOutlined />} ismenu={true} menu={menu} onClick={onClick} toolbar={props}></WayButton>
+                        <WayButton {...attrToButtonProps(attr)} icon={<DownOutlined />} ismenu={true} menu={menu} onClick={() => onClick(attr.command, attr)} toolbar={props}></WayButton>
                     )
                 } else {
-                    return <WayButton {...attrToButtonProps(attr)} onClick={onClick} toolbar={props}></WayButton>
+                    return <WayButton {...attrToButtonProps(attr)} onClick={() => onClick(attr.command, attr)} toolbar={props}></WayButton>
                 }
             })}
         </Space>)
@@ -136,9 +136,9 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
             return (<WayProSearch onSearch={props.searchShow.onSearch} fields={props.searchShow.fields}></WayProSearch>)
         }
     }
-    const onClick = (command: any) => {
+    const onClick = (name: any, command: CommandAttribute) => {
         if (props.onClick != undefined)
-            props.onClick(command.name, command)
+            props.onClick(name, command)
     }
     function attrToButtonProps(attr: CommandAttribute) {
         var prop = {

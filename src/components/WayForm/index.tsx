@@ -21,7 +21,7 @@ export interface FormPlus extends FormInstance<any> {
 }
 
 interface WayFromProps {
-    attr: ModelAttribute
+    attr?: ModelAttribute
     title?: string
     ismodal?: boolean
     modaltype?: string | 'modal' | 'drawer'
@@ -40,10 +40,7 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
     const [form] = Form.useForm()
     const [title, setTitle] = useState(props.title)
     const [isshow, setModalShow] = useState(props.isshow ?? false)
-    const [formModel, setFormModel] = useState({
-        items: props.attr.fields?.filter((field) => { return field.visible && field.isedit }),
-        models: props.attr.childmodels?.filter((m) => { return m.visible })
-    })
+    const [formModel, setFormModel] = useState(filterModel(props.attr))
     const [values, setValues] = useState(() => setFormValues(props.values))
     const [closeToolbar, setCloseToolbar] = useState(false)
     const [closeSearch, setCloseSearch] = useState(false)
@@ -54,6 +51,15 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
             clearFormValues()
         }
     }, [props.values])
+    useEffect(() => {
+        setFormModel(filterModel(props.attr))
+    }, [props.attr])
+    function filterModel(attr) {
+        return {
+            items: attr?.fields?.filter((field) => { return field.visible && field.isedit }),
+            models: attr?.childmodels?.filter((m) => { return m.visible })
+        }
+    }
     function setForm() {
         const children: JSX.Element[] = [];
         formModel.items?.forEach((field) => {
@@ -65,7 +71,20 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
             children.push(
                 <Col span={8}>
                     <Form.Item {...item}>
-                        <WayTextBox {...txtprops} attr={field} />
+                        <WayTextBox {...txtprops} attr={field}
+                            onSearchBefore={(item, callback) => {
+                                item.field = field
+                                if (props.onSearchData != undefined) {
+                                    console.log("form.onSearchBefore")
+                                    props.onSearchData(item, (data) => {
+                                        callback(data.model, data)
+                                    })
+                                }
+                            }} onSearchData={(item, callback) => {
+                                if (props.onSearchData) {
+                                    props.onSearchData(item, callback)
+                                }
+                            }} />
                     </Form.Item>
                 </Col>
             )
@@ -150,23 +169,24 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
             rules = props.onFieldRules(field, rules)
         return rules
     }
-    const formhtml = () => {
+    const getFormValue = (finishValue: any) => {
+        var res = Object.assign({}, values)
+        for (var n in finishValue)
+            res[n] = finishValue[n]
+        if (formModel.models != undefined && formModel.models?.length > 0) {
+            formModel.models.forEach((cm) => {
+                cm.removeRows?.forEach((row) => {
+                    row.state = 3
+                    res[cm.name].push(row)
+                })
+            })
+        }
+        return res
+    }
+    function renderForm() {
         return (<Form form={form}
             onFinish={(formvalues) => {
-                var res = Object.assign({}, values)
-                for (var n in formvalues)
-                    res[n] = formvalues[n]
-                if (formModel.models != undefined && formModel.models?.length > 0) {
-                    formModel.models.forEach((cm) => {
-                        if (cm.removeRows.length > 0) {
-                            cm.removeRows.forEach((rr) => {
-                                rr.state = 3
-                                res[cm.name].push(rr)
-                            })
-                        }
-                    })
-                }
-                console.log(res)
+                var res = getFormValue(formvalues)
                 if (props.onFinish != undefined) {
                     props.onFinish(res)
                 }
@@ -175,15 +195,15 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
             initialValues={props.values}
         ><Row gutter={24}>{setForm()}</Row></Form>)
     }
-    const childhtml = () => {
+    function renderChildTables() {
         if (formModel.models != undefined && formModel.models?.length > 0) {
             return (<Tabs defaultActiveKey={"0"}>
                 {formModel.models?.map((cm, index) => {
                     return (
                         <TabPane tab={cm.title} key={index}>
-                            <WayEditTable model={cm} data={{ rows: values[cm.name], total: values[cm.name].total }} iscirclebutton={true} closetoolbar={closeToolbar} closesearch={closeSearch} onSearchData={(item) => {
+                            <WayEditTable model={cm} data={{ rows: values[cm.name], total: values[cm.name]?.total }} iscirclebutton={true} closetoolbar={closeToolbar} closesearch={closeSearch} onSearchData={(item) => {
                                 if (props.onSearchData != undefined) {
-                                    item.parent = form.getFieldsValue()
+                                    item.parent = values
                                     item.childmodel = cm
                                     props.onSearchData(item, (data: TableData) => {
                                         var row = Object.assign({}, values)
@@ -198,10 +218,12 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
                                     vvv[cm.name] = data.rows
                                     vvv[cm.name].total = data.total
                                     if (type == 'remove') {
-                                        row.forEach((r) => { cm.removeRows.push(r) })
+                                        row.forEach((r) => {
+                                            if (!r.isnew)
+                                                cm.removeRows.push(r)
+                                        })
                                     }
                                     setValues(vvv)
-                                    
                                 }}
                             ></WayEditTable>
                         </TabPane>
@@ -209,22 +231,21 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
                 })}
             </Tabs>)
         }
+        return (<></>)
     }
-    const html = () => {
+    function render() {
         if (props.ismodal) {
             return (<Modal title={title} width={1000} visible={isshow} onCancel={() => setModalShow(false)} onOk={() => {
                 form.submit()
             }}>
-                <Card>{formhtml()}</Card>
-                {childhtml()}
+                <Card>{renderForm()}</Card>
+                {renderChildTables()}
             </Modal>)
         } else {
-            return (<><Card title={title}>{formhtml()}</Card>{childhtml()}</>)
+            return (<><Card title={title}>{renderForm()}</Card>{renderChildTables()}</>)
         }
     }
-    return (
-        html()
-    )
+    return (render())
 }
 
 export default WayFrom;
