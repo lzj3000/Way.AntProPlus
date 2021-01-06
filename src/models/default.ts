@@ -21,12 +21,18 @@ const WayModel: DefaultModelType = {
         },
         *search(args, { call, put }) {
             console.log('search')
+            var item=args.payload.item
             const result = yield call(async () => await request(`/api/${args.payload.c}/search`, {
                 method: 'POST',
-                data: args.payload.item
+                data: item
             }))
-            console.log(result)
-            yield put({ type: "searched", value: result, item: args.payload.item })
+            if (item.field && item.foreign) {//外键查询
+                return result
+            }
+            if (item.parent && item.childmodel) {//子集查询
+                return result
+            }
+            yield put({ type: "searched", value: result})
         },
         *execute(args, { call, put }) {
             const result = yield call(async () => await request(`/api/${args.payload.c}/${args.payload.command}`, {
@@ -43,21 +49,7 @@ const WayModel: DefaultModelType = {
             return obj
         },
         searched(state, action) {
-            var item: SearchItem = action.item
-            var result = action.value.result
             var obj = { ...state }
-            if (item.field && item.foreign) {//外键查询
-                obj.model?.fields?.forEach((f) => {
-                    if (f.field == item.field?.field && f.foreign != undefined) {
-                        f.foreign.model = result.model
-                        f.foreign.data = result.data
-                    }
-                })
-                return obj
-            }
-            if (item.parent && item.childmodel) {//子集查询
-
-            }
             obj.result = action.value
             return obj
         },

@@ -19,11 +19,6 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const [values, setValues] = useState(null)
     const [selectCount, setSelectCount] = useState(0)
     const [model, setModel] = useState(null)
-    const [result, setResult] = useState({
-        success: true,
-        result: null,
-        message: ''
-    })
 
     const [errmessage, setErrMessage] = useState({
         iserr: false,
@@ -31,15 +26,12 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     })
     var form: FormPlus = null
     useEffect(() => {
-        //setModel(null)
+        setModel(null)
         props.init()
     }, [])
     useEffect(() => {
         if (props.result != undefined && props.result.success != true)
             setErrMessage({ iserr: !props.result?.success, message: props.result?.message })
-        else {
-            setResult(props.result)
-        }
     }, [props.result])
     useEffect(() => {
         setModel(props.model)
@@ -57,7 +49,6 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     function renderToolbar() {
         return (<WayToolbar attrs={model?.commands} isselectrow={true} selectcount={selectCount}
             commandShow={true}
-            helpShow={{ isset: true, ishelp: true }}
             onClick={(name: string, command: CommandAttribute) => {
                 if (name == 'edit' || name == 'add') {
                     if (form != null) {
@@ -79,7 +70,6 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                 onSearch: (w: SearchWhere) => {
                     searchItem.whereList[w]
                     searchItem.page = 1
-                    console.log('page.searchShow')
                     searchData()
                 }
             }}
@@ -100,19 +90,36 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                             setValues(null)
                     }
                 }}
-                onSearchData={(item) => {
-                    for (var n in item) {
-                        searchItem[n] = item[n]
-                    }
-                    searchData()
+                onSearchData={(item, callback) => {
+                    props.search(item).then(result => {
+                        if (result != undefined && result.success) {
+                            var data = result.result.data ?? {}
+                            if (!data.rows)
+                                data.rows = []
+                            if (!data.total)
+                                data.total = 0
+                            callback(data)
+                        }
+                    })
                 }}
             ></WayTable>)
     }
     function renderForm() {
         return (
             <WayForm attr={model} title={props.title} ismodal={true} onFinish={setValues} onInitFormed={(f) => { form = f }}
-                onSearchData={(item) => {
-                    props.search(item)
+                onSearchData={(item, callback) => {
+                    props.search(item).then(result => {
+                        if (result != undefined && result.success) {
+                            var data = result.result.data ?? {}
+                            if (result.result.model)
+                                data.model = result.result.model
+                            if (!data.rows)
+                                data.rows = []
+                            if (!data.total)
+                                data.total = 0
+                            callback(data)
+                        }
+                    })
                 }}
             ></WayForm>
         )
@@ -122,7 +129,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             <Row gutter={[16, 16]}><Col span={24}>{renderToolbar()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderTable()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderForm()}</Col></Row>
-            <Modal visible={errmessage.iserr} onOk={() => { setErrMessage({ iserr: false }) }}><Alert
+            <Modal visible={errmessage.iserr} onOk={() => { setErrMessage({ iserr: false }) }} onCancel={() => { setErrMessage({ iserr: false }) }}><Alert
                 message="错误"
                 description={errmessage.message}
                 type="error"
@@ -167,8 +174,12 @@ function mapDispatchToProps(dispatch: any, ownProps: WayPageProps) {
     return {
         dispatch,
         init() { dispatch(init(ownProps.controller)) },
-        search(searchItem: SearchItem) { dispatch(search({ c: ownProps.controller, item: searchItem })) },
-        execute(command: string, item: any) { dispatch(execute({ c: ownProps.controller, command: command, item: item })) },
+        search(searchItem: SearchItem) {
+            return dispatch(search({ c: ownProps.controller, item: searchItem }))
+        },
+        execute(command: string, item: any) {
+            return dispatch(execute({ c: ownProps.controller, command: command, item: item }))
+        },
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(WayPage);

@@ -4,6 +4,7 @@ import { ChildModelAttribute, CommandAttribute, SearchItem, SearchWhere, TableDa
 import WayTable from "../WayTable"
 import WayToolbar from "../WayToolbar"
 import moment from 'moment';
+import DragModal from "./window"
 
 interface WayEditTableProps {
     model?: ChildModelAttribute,
@@ -11,9 +12,11 @@ interface WayEditTableProps {
     iscirclebutton?: boolean,
     closetoolbar?: boolean,
     closesearch?: boolean,
+    closeedit?: boolean,
     commandShow?: boolean,
     ismodal?: boolean,
     modelshow?: boolean,
+    selectType?: string,
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
     onAddRowing?: (row: any) => boolean,
     onAdded?: (row: any) => void,
@@ -24,6 +27,7 @@ interface WayEditTableProps {
     onGetCommands?: (commands: CommandAttribute[]) => CommandAttribute[],
     onCommandClicking?: (command: CommandAttribute) => void,
     onCommandClicked?: (command: CommandAttribute) => void,
+    onModalChange?: (isshow: boolean, row: any) => void,
 }
 const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     const [selectKeys, setSelectKeys] = useState([])
@@ -36,6 +40,9 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     useEffect(() => {
         setData(props.data)
     }, [props.data])
+    useEffect(() => {
+        setModalShow(props.modelshow ?? false)
+    }, [props.modelshow])
     var searchItem: SearchItem = {
         page: 1,
         size: 10,
@@ -117,7 +124,12 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
         }
         return mm
     }
-
+    function modalChange(isshow: boolean, row: any) {
+        setModalShow(isshow)
+        if (props.onModalChange) {
+            props.onModalChange(isshow, row)
+        }
+    }
     function renderToolbar() {
         if (props.closetoolbar) return
         return (
@@ -141,8 +153,10 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                 searchShow={(props.closesearch) ? false : {
                     fields: props.model?.fields,
                     onSearch: (w: SearchWhere) => {
-                        searchItem.whereList[w]
+                        searchItem.whereList = []
+                        searchItem.whereList.push(w)
                         searchItem.page = 1
+                        searchItem.sortList = []
                         if (props.onSearchData != undefined) {
                             props.onSearchData(searchItem, (data: TableData) => {
                                 setData(data)
@@ -155,7 +169,7 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     }
     function renderTable() {
         return (
-            <WayTable attr={props.model} data={data} isedit={true} rowedit={rowedit} isselect={true}
+            <WayTable attr={props.model} data={data} isedit={!props.closeedit} rowedit={rowedit} selectType={props.selectType ?? "checkbox"} isselect={true}
                 isclosecard={true}
                 onSelectRows={(row, keys, selected) => {
                     setSelectKeys(keys)
@@ -187,20 +201,25 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                     if (record.editable != undefined) {
                         setRowEdit(record.editable)
                     }
+                    if (props.ismodal && isshow) {
+                        modalChange(false, record)
+                    }
                 }}
             ></WayTable>
         )
     }
     function render() {
         if (props.ismodal) {
-            return (<Modal title={props.model?.title} width={600} visible={isshow} onCancel={() => setModalShow(false)} onOk={() => {
-                setModalShow(false)
+            return (<DragModal title={props.model?.title} width={600} visible={isshow} onCancel={() => {
+                modalChange(false, null)
+            }} onOk={() => {
+                modalChange(false, selectRow)
             }}>
                 <Card>
                     {renderToolbar()}
                     {renderTable()}
                 </Card>
-            </Modal>)
+            </DragModal>)
         } else {
             return (<Card>
                 {renderToolbar()}

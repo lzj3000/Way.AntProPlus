@@ -141,6 +141,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             fixed: true,
             type: selectType,
             columnTitle: selectTitle,
+            columnWidth:'60px',
             selections: [
                 {
                     key: 'invert',
@@ -184,7 +185,6 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     function setrowedit(record) {
         if (props.isedit) {
             record.editable = !rowedit
-            console.log(String(record.editable))
             var rows = [...data.rows]
             rows.forEach(r => {
                 if (r.id == record.id) {

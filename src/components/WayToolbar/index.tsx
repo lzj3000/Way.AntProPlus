@@ -66,7 +66,7 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
                 mianButtons.push(attr)
             }
         })
-        return (<Space>{
+        return (<Space wrap>{
             mianButtons.map((attr) => {
                 if (splitButtons.has(attr.command)) {
                     const menu = (

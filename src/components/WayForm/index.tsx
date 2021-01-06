@@ -6,6 +6,7 @@ import { FormItemProps, FormInstance } from 'antd/lib/form';
 import WayEditTable from './edittable';
 import { values } from 'lodash';
 import { bool, number } from 'prop-types';
+import DragModal from './window';
 
 
 const TabPane = Tabs.TabPane
@@ -75,12 +76,12 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
                             onSearchBefore={(item, callback) => {
                                 item.field = field
                                 if (props.onSearchData != undefined) {
-                                    console.log("form.onSearchBefore")
                                     props.onSearchData(item, (data) => {
                                         callback(data.model, data)
                                     })
                                 }
                             }} onSearchData={(item, callback) => {
+                                item.field = field
                                 if (props.onSearchData) {
                                     props.onSearchData(item, callback)
                                 }
@@ -235,12 +236,12 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
     }
     function render() {
         if (props.ismodal) {
-            return (<Modal title={title} width={1000} visible={isshow} onCancel={() => setModalShow(false)} onOk={() => {
+            return (<DragModal title={title} width={1000} visible={isshow} onCancel={() => setModalShow(false)} onOk={() => {
                 form.submit()
             }}>
                 <Card>{renderForm()}</Card>
                 {renderChildTables()}
-            </Modal>)
+            </DragModal>)
         } else {
             return (<><Card title={title}>{renderForm()}</Card>{renderChildTables()}</>)
         }

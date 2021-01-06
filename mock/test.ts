@@ -30,7 +30,7 @@ export default {
             { field: 'city', title: '居住城市', type: 'int', required: true, visible: true, isedit: true, disabled: false, comvtp: { isvtp: true, items: [[0, '北京'], [1, '上海'], [2, '深圳'], [3, '成都']] } },
             {
                 field: 'thing', title: '梦想', type: 'int', required: true, visible: true, isedit: true,
-                foreign: { isfkey: true, OneObjecFiled: "id", }
+                foreign: { isfkey: true, OneObjecFiledKey: "id",OneDisplayName:"name" }
             }
         ],
         childmodels: [{
@@ -59,9 +59,7 @@ export default {
         ]
     },
     'POST /api/test/search': (req: Request, res: Response) => {
-        console.log(req)
         var item: SearchItem = req.body
-        console.log(item)
         if (item.field && item.foreign) {
             res.send({
                 success: true,

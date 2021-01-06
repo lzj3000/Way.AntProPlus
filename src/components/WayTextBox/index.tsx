@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import useMergeValue from 'use-merge-value';
 
 import { DatePicker, Input, InputNumber, Select, Switch } from 'antd';
@@ -43,20 +43,14 @@ export interface WayTextBoxProps {
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
 }
 const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
-    const [value, setValue] = useMergeValue<any | undefined>(props.defaultValue, {
-        value: anyToObject(props.value),
-        onChange: (value, prevValue) => {
-            if (props.onChange != undefined) {
-                props.onChange(anyToString(value))
-            }
-        },
-    });
     const [searchModal, setSearchModal] = useState({
         isshow: false,
         model: undefined,
-        data: undefined
+        data: undefined,
+        value: '',
+        text: ''
     })
-    const inputRef = useRef<Input | null>(null);
+
     const defaultProps = {
         autoFocus: false,
         maxLength: 500,
@@ -67,8 +61,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         allowClear: true,
         placeholder: '',
         disabled: props.disabled ?? false,
-        style: { width: '100%' },
-        ref: inputRef
+        style: { width: '100%' }
         // onPressEnter: (event: any) => {
         //     if (props.onPressEnter != undefined)
         //         props.onPressEnter(event.currentTarget.value)
@@ -128,7 +121,16 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
             textType = TextType.Input;
         }
     }
+    const [value, setValue] = useMergeValue<any | undefined>(props.defaultValue, {
+        value: anyToObject(props.value),
+        onChange: (value, prevValue) => {
+            if (props.onChange != undefined) {
+                props.onChange(anyToString(value))
+            }
+        },
+    });
     function anyToObject(value: any) {
+        console.log(textType)
         switch (textType) {
             case TextType.InputNumber:
                 if (value == null || value == undefined)
@@ -137,6 +139,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                     return Number(value)
                 } else return null
             case TextType.DatePicker:
+                console.log(value)
                 if (value == null || value == undefined)
                     return null
                 if (typeof value == "string") {
@@ -151,7 +154,8 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                         return dates
                     }
                     return moment(value, 'YYYY-MM-DD')
-                } else return null
+                } else
+                    return moment(value)
         }
         return value
     }
@@ -224,19 +228,36 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 onSearch={(value) => {
                     if (props.onSearchBefore != undefined) {
                         var item = { foreign: attr?.foreign, value: value }
-                        console.log("textbox.onSearchBefore")
-                        console.log(item)
-                        props.onSearchBefore(item)
+                        props.onSearchBefore(item, (model, data) => {
+                            setSearchModal({
+                                isshow: true,
+                                model: model,
+                                data: data
+                            })
+                        })
                     }
                 }}
             >
             </Search>
-                <WayEditTable ismodal={true} modelshow={searchModal.isshow} model={attr?.foreign?.model} data={attr?.foreign?.data} commandShow={false}
-                    onSearchData={(item: SearchItem) => {
+                <WayEditTable ismodal={true} modelshow={searchModal.isshow} model={searchModal.model} 
+                data={searchModal.data} closeedit={true} commandShow={false} selectType={"radio"}
+                    onModalChange={(isshow: boolean, row: any) => {
+                        var obj = Object.assign({}, searchModal)
+                        obj.isshow = isshow
+                        if (row != null) {
+                            obj.value = row[attr?.foreign?.OneObjecFiledKey]
+                            var text = row[attr?.foreign?.OneDisplayName]
+                            obj.text = text
+                            setValue(text)
+                        }
+                        setSearchModal(obj)
+                    }}
+                    onSearchData={(item: SearchItem, callback) => {
                         item.foreign = attr?.foreign
                         item.value = value
+                        console.log(item)
                         if (props.onSearchData != undefined) {
-                            props.onSearchData(item)
+                            props.onSearchData(item, callback)
                         }
                     }}
                 ></WayEditTable></>
