@@ -55,7 +55,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
     })
     useEffect(() => {
         if (props.attr?.foreign != undefined && props.attr.foreign.isfkey) {
-            if (searchValue.row == undefined) {
+            if (searchValue.row == undefined && props.children != undefined) {
                 setSearchRowToValue(props.children[props.attr.foreign.OneObjecFiled])
             }
         }
