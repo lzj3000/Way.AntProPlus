@@ -12,7 +12,7 @@ import ProLayout, {
 } from '@ant-design/pro-layout';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Link, useIntl, connect, Dispatch, history } from 'umi';
-import { GithubOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, GithubOutlined } from '@ant-design/icons';
 import { Result, Button } from 'antd';
 import Authorized from '@/utils/Authorized';
 import RightContent from '@/components/GlobalHeader/RightContent';
@@ -46,6 +46,23 @@ export type BasicLayoutContext = { [K in 'location']: BasicLayoutProps[K] } & {
     [path: string]: MenuDataItem;
   };
 };
+const transportMenus = (): MenuDataItem[] => {
+  var menus: MenuDataItem[] = [
+    {
+      path: "base",
+      icon: <DatabaseOutlined />,
+      name: "业务功能",
+      children: [
+        { name: '仓库管理', path: '/transport/Store' },
+        { name: '承运商管理', path: '/transport/TranSupplier' },
+        { name: '车辆管理', path: '/transport/Vehicle' },
+        { name: '司机管理', path: '/transport/Deiver' },
+        { name: '任务管理', path: '/transport/TranTask' },
+      ]
+    }
+  ]
+  return menus
+}
 /**
  * use Authorized check all menu item
  */
@@ -153,11 +170,11 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
           return first ? (
             <Link to={paths.join('/')}>{route.breadcrumbName}</Link>
           ) : (
-            <span>{route.breadcrumbName}</span>
-          );
+              <span>{route.breadcrumbName}</span>
+            );
         }}
         footerRender={() => defaultFooterDom}
-        menuDataRender={menuDataRender}
+        menuDataRender={transportMenus}
         rightContentRender={() => <RightContent />}
         postMenuData={(menuData) => {
           menuDataRef.current = menuData || [];

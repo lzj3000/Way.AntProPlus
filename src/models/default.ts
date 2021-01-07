@@ -1,4 +1,3 @@
-import { SearchItem } from '@/components/Attribute';
 import { DefaultModelType } from '@/components/WayPage/defaultModel';
 import request from '@/utils/request';
 const WayModel: DefaultModelType = {

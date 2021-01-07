@@ -84,8 +84,13 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
     }
     function renderButton() {
         return (<Button style={{ width: '15%' }} type={'primary'} icon={<SearchOutlined />} onClick={() => {
-            props.onSearch({ name: nameType.name, symbol: nameType.symbol, value: text.value })
-        }}></Button>)
+            var item = { name: nameType.name, symbol: nameType.symbol, value: text.value }
+            if (item.name == "*" && item.value == "")
+                props.onSearch()
+            else
+                props.onSearch(item)
+        }
+        }></Button>)
     }
     function render() {
         return (

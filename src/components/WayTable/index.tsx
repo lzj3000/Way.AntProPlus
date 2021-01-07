@@ -83,7 +83,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         }
         attr?.fields?.filter((field) => field.visible).forEach((item) => {
             cols.push({
-                dataIndex: item.field, title: item.title, sorter: true, render: (text: any, record: any) => {
+                dataIndex: item.field, title: item.title, sorter: true, width: 150, render: (text: any, record: any) => {
                     if (record == undefined) return
                     if (rowedit && record.editable) {
                         return columnToEdit(item, record)
@@ -292,6 +292,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             rowKey="id"
             columns={getColumns(props.attr)}
             rowSelection={rowSelection()}
+            scroll={{ x: true }}
             dataSource={data.rows}
             pagination={{ current: 1, pageSize: 10, total: data.total }}
             loading={loading}

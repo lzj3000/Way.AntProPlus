@@ -73,6 +73,12 @@ export default defineConfig({
               redirect: '/dashboard/analysis',
             },
             {
+              name: 'transport',
+              icon: 'smile',
+              path: '/transport/:path',
+              component: './transport',
+            },
+            {
               path: '/dashboard',
               name: 'dashboard',
               icon: 'dashboard',

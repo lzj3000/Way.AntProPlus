@@ -19,7 +19,9 @@ interface WayPageProps {
 const WayPage: React.FC<WayPageProps> = (props) => {
     const [values, setValues] = useState(null)
     const [selectCount, setSelectCount] = useState(0)
+    const [keys, setKeys] = useState([])
     const [model, setModel] = useState<ModelAttribute | undefined>(undefined)
+    const [data, setData] = useState({ rows: [], total: 0 })
 
     var form: FormPlus = null
     useEffect(() => {
@@ -27,13 +29,24 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         props.init()
     }, [])
     useEffect(() => {
-        if (props.result != undefined && props.result.success != true)
-            setErrMessage({ iserr: !props.result?.success, message: props.result?.message })
+        if (props.result != undefined) {
+            if (props.result.success != true) {
+                resultMessage(props.result.message)
+            }
+            else {
+                if (props.result.result) {
+                    var res = props.result.result
+                    console.log(res)
+                    setData({ rows: res.list, total: res.total })
+                }
+            }
+        }
     }, [props.result])
     useEffect(() => {
         setModel(props.model)
     }, [props.model])
     if (props.model == null) { return (<></>) }
+
     var searchItem: SearchItem = {
         page: 1,
         size: 10,
@@ -43,16 +56,31 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const searchData = () => {
         props.search(searchItem)
     }
+    const executeCommand = (command: CommandAttribute) => {
+        var item = null
+        if (command.isselectrow)
+            item = values
+        if (command.selectmultiple)
+            item = keys
+        executeCommandData(command, item)
+    }
+    const executeCommandData = (command: CommandAttribute, values: any) => {
+        props.execute(command.command, values).then((result) => {
+            if (result != undefined && result.success) {
+                searchData()
+            } else {
+                resultMessage(result.message)
+            }
+        })
+    }
     const searchDataThan = (item: SearchItem, callback: (data: TableData) => void) => {
         props.search(item).then(result => {
             if (result != undefined && result.success) {
-                var data = result.result.data ?? {}
-                if (result.result.model)
-                    data.model = result.result.model
-                if (!data.rows)
-                    data.rows = []
-                if (!data.total)
-                    data.total = 0
+                var data = {}
+                if (result.result.view)
+                    data.model = result.result.view
+                data.rows = result.result.list ?? []
+                data.total = result.result.total
                 callback(data)
             } else {
                 resultMessage(result.message)
@@ -82,14 +110,18 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                         form.setValues(values)
                         form.setHideSearch(false)
                     }
+                    form.onFinish = (values) => {
+                        executeCommandData(command, values)
+                    }
                 } else {
-                    props.execute(command)
+                    executeCommand(command)
                 }
             }}
             searchShow={{
                 fields: model?.fields?.filter(f => f.issearch ?? true),
                 onSearch: (w: SearchWhere) => {
-                    searchItem.whereList = [w]
+                    if (w != undefined)
+                        searchItem.whereList = [w]
                     searchItem.page = 1
                     searchData()
                 },
@@ -99,17 +131,23 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }
     function renderTable() {
         return (
-            <WayTable attr={model} data={props.result?.result} isselect={true} isexpandable={true}
+            <WayTable attr={model} data={data} isselect={true} isexpandable={true}
                 onSelectRows={(row, keys, selected) => {
+                    setKeys(keys)
                     setSelectCount(keys.length)
                     setValues(row)
                 }}
-                onSearchData={searchDataThan}
+                onSearchData={(item) => {
+                    searchItem.page = item.page
+                    searchItem.size = item.size
+                    searchItem.sortList = item.sortList
+                    searchData()
+                }}
             ></WayTable>)
     }
     function renderForm() {
         return (
-            <WayForm attr={model} title={props.title} ismodal={true} onFinish={setValues} onInitFormed={(f) => { form = f }}
+            <WayForm attr={model} title={props.title} ismodal={true} onInitFormed={(f) => { form = f }}
                 onSearchData={searchDataThan}
             ></WayForm>
         )
@@ -157,7 +195,9 @@ function mapDispatchToProps(dispatch: any, ownProps: WayPageProps) {
     }
     return {
         dispatch,
-        init() { dispatch(init(ownProps.controller)) },
+        init() {
+            return dispatch(init(ownProps.controller))
+        },
         search(searchItem: SearchItem) {
             return dispatch(search({ c: ownProps.controller, item: searchItem }))
         },

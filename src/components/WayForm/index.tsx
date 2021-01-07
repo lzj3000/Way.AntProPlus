@@ -16,7 +16,8 @@ export interface FormPlus extends FormInstance<any> {
     show: () => void,
     clear: () => void,
     setHideSearch: (isshow: boolean) => void,
-    setHideToolbar: (isshow: boolean) => void
+    setHideToolbar: (isshow: boolean) => void,
+    onFinish?: (values: any) => void
 }
 
 interface WayFromProps {
@@ -183,8 +184,10 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
     function renderForm() {
         return (<Form form={form}
             onFinish={(formvalues) => {
-                console.log(formvalues)
                 var res = getFormValue(formvalues)
+                if (form.onFinish != undefined) {
+                    form.onFinish(res)
+                }
                 if (props.onFinish != undefined) {
                     props.onFinish(res)
                 }

@@ -112,7 +112,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
             if (attr.foreign != undefined && attr.foreign.isfkey) {
                 textType = TextType.Search
             }
-            if (attr.length != undefined && attr.length != 500)
+            if (attr.length != undefined && attr.length > 0)
                 defaultProps.maxLength = attr.length
             if (props.disabled == undefined && attr.disabled != undefined) {
                 defaultProps.disabled = attr.disabled
