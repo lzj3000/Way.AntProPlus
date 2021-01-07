@@ -4,7 +4,7 @@ import { Row, Col, Space, Menu, Divider, Card } from 'antd'
 import Icon, { DownOutlined, PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined, PrinterOutlined, QuestionOutlined, InfoOutlined, SettingOutlined, ExclamationCircleOutlined, SearchOutlined, RollbackOutlined, ClearOutlined, SaveOutlined, FastForwardFilled, WhatsAppOutlined } from '@ant-design/icons';
 import WayButton from './waybutton'
 import WayProSearch, { WayProSearchProps } from './wayprosearch'
-import { CommandAttribute } from '../Attribute';
+import { CommandAttribute, SearchItem, TableData } from '../Attribute';
 
 
 
@@ -20,7 +20,7 @@ export interface WayToolbarProps {
     selectcount?: number,
     isclosecard?: boolean,
     onClick?: (name: string, command: CommandAttribute) => void,
-    onCommandDisabled?: (command: CommandAttribute) => boolean,
+    onCommandDisabled?: (command: CommandAttribute) => boolean
 }
 interface WayHelpProps {
     isprint?: boolean,
@@ -106,7 +106,7 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
                 isabout: props.helpShow?.isabout ?? false,
                 wvh: props.helpShow?.wvh ?? new DefultViewHelp()
             })
-            return (<Space size={0} wrap>{showhelp(whp)}</Space>)
+            return (<Space wrap>{showhelp(whp)}</Space>)
         }
     }
     function showhelp(whp: WayHelpProps) {
@@ -133,7 +133,7 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
     }
     function initsearch() {
         if (props.searchShow != undefined && props.searchShow != false) {
-            return (<WayProSearch onSearch={props.searchShow.onSearch} fields={props.searchShow.fields}></WayProSearch>)
+            return (<WayProSearch {...props.searchShow}></WayProSearch>)
         }
     }
     const onClick = (name: any, command: CommandAttribute) => {

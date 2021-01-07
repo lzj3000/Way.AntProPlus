@@ -53,13 +53,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         value: '',
         text: ''
     })
-    useEffect(() => {
-        if (props.attr?.foreign != undefined && props.attr.foreign.isfkey) {
-            if (searchValue.row == undefined) {
-                setSearchRowToValue(props.children[props.attr.foreign.OneObjecFiled])
-            }
-        }
-    }, [props.value])
+
     const defaultProps = {
         autoFocus: false,
         maxLength: 500,
@@ -164,6 +158,9 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                     return moment(value, 'YYYY-MM-DD')
                 } else
                     return moment(value)
+            case TextType.Search:
+                setSearchRowToValue(value)
+                return value['id']
         }
         return value
     }
@@ -182,22 +179,21 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 if (!isNumber(value))
                     return 0
                 return Number(value)
+            case TextType.Search:
+                return searchValue.value
         }
         return value
     }
     function setSearchRowToValue(row: any) {
-        var obj = {}
         if (row != null) {
-            obj.row = row
-            obj.value = row[attr?.foreign?.OneObjecFiledKey]
-            obj.text = row[attr?.foreign?.OneDisplayName]
+            searchValue.row = row
+            searchValue.value = row[attr?.foreign?.OneObjecFiledKey]
+            searchValue.text = row[attr?.foreign?.OneDisplayName]
         } else {
-            obj.value = ''
-            obj.text = ''
-            obj.row = undefined
+            searchValue.value = ''
+            searchValue.text = ''
+            searchValue.row = undefined
         }
-        setSearchValue(obj)
-        setValue(obj.value)
     }
     function renderSearch() {
         return (<><Search
@@ -225,6 +221,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                     sm.isshow = isshow
                     setSearchModal(sm)
                     setSearchRowToValue(row)
+                    setSearchValue({ ...searchValue })
                 }}
                 onSearchData={(item: SearchItem, callback) => {
                     item.field = attr

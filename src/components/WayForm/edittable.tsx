@@ -135,8 +135,6 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
         return (
             <WayToolbar iscircle={props.iscirclebutton} commandShow={comshow} selectcount={selectKeys.length} attrs={coms} isclosecard={true}
                 onClick={(name: string, command: CommandAttribute) => {
-                    console.log(name)
-                    console.log(command)
                     if (props.onCommandClicking) {
                         props.onCommandClicking(command)
                     }
@@ -162,7 +160,8 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                                 setData(data)
                             })
                         }
-                    }
+                    },
+                    onSearchData: props.onSearchData
                 }}
             ></WayToolbar>
         )
@@ -173,10 +172,7 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                 isclosecard={true}
                 onSelectRows={(row, keys, selected) => {
                     setSelectKeys(keys)
-                    if (selected)
-                        setSelectRow(row)
-                    else
-                        setSelectRow(null)
+                    setSelectRow(row)
                 }}
                 onSearchData={(item) => {
                     searchItem.page = item.page

@@ -4,8 +4,9 @@ import { connect } from 'react-redux'
 import WayToolbar from '../WayToolbar'
 import WayTable from '../WayTable'
 import WayForm, { FormPlus } from '../WayForm'
-import { CommandAttribute, ModelAttribute, ResultData, SearchItem, SearchWhere } from '../Attribute';
+import { CommandAttribute, ModelAttribute, ResultData, SearchItem, SearchWhere, TableData } from '../Attribute';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
+import { CloseCircleOutlined } from '@ant-design/icons';
 
 interface WayPageProps {
     namespace?: string
@@ -18,12 +19,8 @@ interface WayPageProps {
 const WayPage: React.FC<WayPageProps> = (props) => {
     const [values, setValues] = useState(null)
     const [selectCount, setSelectCount] = useState(0)
-    const [model, setModel] = useState(null)
+    const [model, setModel] = useState<ModelAttribute | undefined>(undefined)
 
-    const [errmessage, setErrMessage] = useState({
-        iserr: false,
-        message: ''
-    })
     var form: FormPlus = null
     useEffect(() => {
         setModel(null)
@@ -43,8 +40,32 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         whereList: [],
         sortList: [],
     }
-    function searchData() {
+    const searchData = () => {
         props.search(searchItem)
+    }
+    const searchDataThan = (item: SearchItem, callback: (data: TableData) => void) => {
+        props.search(item).then(result => {
+            if (result != undefined && result.success) {
+                var data = result.result.data ?? {}
+                if (result.result.model)
+                    data.model = result.result.model
+                if (!data.rows)
+                    data.rows = []
+                if (!data.total)
+                    data.total = 0
+                callback(data)
+            } else {
+                resultMessage(result.message)
+            }
+        })
+    }
+    const resultMessage = (message: string) => {
+        Modal.error({
+            visible: true,
+            title: '出错了',
+            icon: <CloseCircleOutlined />,
+            content: <div>{message}</div>
+        })
     }
     function renderToolbar() {
         return (<WayToolbar attrs={model?.commands} isselectrow={true} selectcount={selectCount}
@@ -66,12 +87,13 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                 }
             }}
             searchShow={{
-                fields: model?.fields,
+                fields: model?.fields?.filter(f => f.issearch ?? true),
                 onSearch: (w: SearchWhere) => {
-                    searchItem.whereList[w]
+                    searchItem.whereList = [w]
                     searchItem.page = 1
                     searchData()
-                }
+                },
+                onSearchData: searchDataThan
             }}
         ></WayToolbar>)
     }
@@ -80,47 +102,15 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             <WayTable attr={model} data={props.result?.result} isselect={true} isexpandable={true}
                 onSelectRows={(row, keys, selected) => {
                     setSelectCount(keys.length)
-                    if (selected)
-                        setValues(row)
-                    else {
-                        if (keys.length == 1) {
-                            var r = props.result?.result.rows.find(r => r.id == keys[0])
-                            setValues(r)
-                        } else
-                            setValues(null)
-                    }
+                    setValues(row)
                 }}
-                onSearchData={(item, callback) => {
-                    props.search(item).then(result => {
-                        if (result != undefined && result.success) {
-                            var data = result.result.data ?? {}
-                            if (!data.rows)
-                                data.rows = []
-                            if (!data.total)
-                                data.total = 0
-                            callback(data)
-                        }
-                    })
-                }}
+                onSearchData={searchDataThan}
             ></WayTable>)
     }
     function renderForm() {
         return (
             <WayForm attr={model} title={props.title} ismodal={true} onFinish={setValues} onInitFormed={(f) => { form = f }}
-                onSearchData={(item, callback) => {
-                    props.search(item).then(result => {
-                        if (result != undefined && result.success) {
-                            var data = result.result.data ?? {}
-                            if (result.result.model)
-                                data.model = result.result.model
-                            if (!data.rows)
-                                data.rows = []
-                            if (!data.total)
-                                data.total = 0
-                            callback(data)
-                        }
-                    })
-                }}
+                onSearchData={searchDataThan}
             ></WayForm>
         )
     }
@@ -129,12 +119,6 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             <Row gutter={[16, 16]}><Col span={24}>{renderToolbar()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderTable()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderForm()}</Col></Row>
-            <Modal visible={errmessage.iserr} onOk={() => { setErrMessage({ iserr: false }) }} onCancel={() => { setErrMessage({ iserr: false }) }}><Alert
-                message="错误"
-                description={errmessage.message}
-                type="error"
-                showIcon
-            /></Modal>
         </PageHeaderWrapper>)
     }
     return (render())

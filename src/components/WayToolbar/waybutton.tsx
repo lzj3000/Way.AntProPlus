@@ -70,22 +70,24 @@ const WayButton: React.FC<WayButtonProps> = (props) => {
             }
         }
     }
-    if (props.ismenu) {
-
-        return (<Dropdown overlay={props.menu}>
-            <Tooltip title={value.title}>
+    function render() {
+        if (props.ismenu) {
+            return (<Dropdown overlay={props.menu}>
+                <Tooltip title={value.title}>
+                    <Button {...value}
+                        onClick={Click}
+                        loading={load}
+                    >{value.text}</Button>
+                </Tooltip></Dropdown >)
+        } else {
+            return (<Tooltip title={value.title}>
                 <Button {...value}
                     onClick={Click}
                     loading={load}
                 >{value.text}</Button>
-            </Tooltip></Dropdown >)
-    } else {
-        return (<Tooltip title={value.title}>
-            <Button {...value}
-                onClick={Click}
-                loading={load}
-            >{value.text}</Button>
-        </Tooltip>)
+            </Tooltip>)
+        }
     }
+    return(render())
 }
 export default WayButton;

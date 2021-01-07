@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import WayTextBox, { TextType } from '../WayTextBox'
 import { Button, Input, Cascader } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { SearchWhere, WayFieldAttribute } from '../Attribute'
+import { SearchItem, SearchWhere, TableData, WayFieldAttribute } from '../Attribute'
 
 
 export interface WayProSearchProps {
     fields?: WayFieldAttribute[],
     onSearch: (w: SearchWhere) => void
+    onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
 }
 const dateItems = ["===", "year", "quarter", "month", "week"]
 const WayProSearch: React.FC<WayProSearchProps> = (props) => {
@@ -20,8 +21,6 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
     { label: "等于", value: "=" }])
     symbolType.set('int', [{ label: "大于", value: ">" },
     { label: "小于", value: "<" },
-    { label: "大于等于", value: ">=" },
-    { label: "小于等于", value: "<=" },
     { label: "等于", value: "=" }])
     symbolType.set('datetime', [{ label: "大于", value: ">" },
     { label: "小于", value: "<" },
@@ -45,37 +44,59 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
             option.push({ label: item.title, value: item.field, children: child })
         })
     }
-    return (
-        <Input.Group compact>
-            <Cascader style={{ width: '35%' }} options={option} allowClear={false} defaultValue={['*']} onChange={(value) => {
-                var name = value[0]
-                var field = props.fields?.find((item) => item.field == name)
-                setNameType({ name: name, symbol: value[1], type: field?.type })
-                setTextChange({ value: '', attr: field })
-                if (field?.type == "datetime") {
-                    var data = { ...textOption }
-                    if (dateItems.includes(value[1])) {
-                        setSearchModel(true)
-                        if (value[1] != "===")
-                            data.picker = value[1]
-                    }
-                    else {
-                        setSearchModel(false)
-                    }
-                    setTextOption(data)
-                }
-                if (field?.type == "boolean") {
+    function renderCascader() {
+        return (<Cascader style={{ width: '35%' }} options={option} allowClear={false} defaultValue={['*']} onChange={(value) => {
+            var name = value[0]
+            var field = props.fields?.find((item) => item.field == name)
+            setNameType({ name: name, symbol: value[1], type: field?.type })
+            setTextChange({ value: '', attr: field })
+            if (field?.type == "datetime") {
+                var data = { ...textOption }
+                if (dateItems.includes(value[1])) {
                     setSearchModel(true)
+                    if (value[1] != "===")
+                        data.picker = value[1]
                 }
-            }} />
-            <WayTextBox width={'50%'} options={textOption} search={searchModel} name={nameType.name} attr={text.attr} value={text.value} onChange={(value) => {
+                else {
+                    setSearchModel(false)
+                }
+                setTextOption(data)
+            }
+            if (field?.type == "boolean") {
+                setSearchModel(true)
+            }
+        }} />)
+    }
+    function renderTextBox() {
+        return (<WayTextBox width={'50%'} options={textOption} search={searchModel} name={nameType.name}
+            attr={text.attr} value={text.value} onChange={(value) => {
                 setTextChange({ value: value, attr: text.attr })
-            }} />
-            <Button style={{ width: '15%' }} type={'primary'} icon={<SearchOutlined />} onClick={() => {
-                props.onSearch({ name: nameType.name, symbol: nameType.symbol, value: text.value })
-            }}></Button>
-        </Input.Group >
-    )
+            }}
+            onSearchBefore={(item, callback) => {
+                if (props.onSearchData) {
+                    props.onSearchData(item, (data) => {
+                        callback(data.model, data)
+                    })
+                }
+            }}
+            onSearchData={props.onSearchData}
+        />)
+    }
+    function renderButton() {
+        return (<Button style={{ width: '15%' }} type={'primary'} icon={<SearchOutlined />} onClick={() => {
+            props.onSearch({ name: nameType.name, symbol: nameType.symbol, value: text.value })
+        }}></Button>)
+    }
+    function render() {
+        return (
+            <Input.Group compact>
+                {renderCascader()}
+                {renderTextBox()}
+                {renderButton()}
+            </Input.Group >
+        )
+    }
+    return (render())
 }
 
 export default WayProSearch;

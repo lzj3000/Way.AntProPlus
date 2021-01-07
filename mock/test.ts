@@ -30,7 +30,7 @@ export default {
             { field: 'city', title: '居住城市', type: 'int', required: true, visible: true, isedit: true, disabled: false, comvtp: { isvtp: true, items: [[0, '北京'], [1, '上海'], [2, '深圳'], [3, '成都']] } },
             {
                 field: 'thing', title: '梦想', type: 'int', required: true, visible: true, isedit: true,
-                foreign: { isfkey: true, OneObjecFiledKey: "id",OneDisplayName:"name" }
+                foreign: { isfkey: true, OneObjecFiled: "ttt", OneObjecFiledKey: "id", OneDisplayName: "name" }
             }
         ],
         childmodels: [{
@@ -91,7 +91,9 @@ export default {
             result: {
                 rows: [
                     {
-                        id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3, cars: [
+                        id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3, thing: 1,
+                        ttt: { id: 1, name: '哥哥', count: 2 },
+                        cars: [
                             { id: 1, brand: '雪铁龙', type: "C4", oldage: '2009' },
                             { id: 2, brand: '现代', type: "T6", oldage: '2012' }
                         ], family: [
@@ -99,7 +101,10 @@ export default {
                             { id: 2, name: '姐姐', count: 1 },
                         ]
                     },
-                    { id: 2, name: "X2", age: 27, "born": "2020-12-03", "ismirc": false, "city": 2 },
+                    {
+                        id: 2, name: "X2", age: 27, "born": "2020-12-03", "ismirc": false, "city": 2, thing: 2,
+                        ttt: { id: 2, name: '姐姐', count: 1 }
+                    },
                     { id: 3, name: "X3", age: 22, "born": "2020-12-03", "ismirc": true, "city": 1 },
                     { id: 4, name: "X4", age: 13, "born": "2020-12-03", "ismirc": false, "city": 0 },
                     { id: 5, name: "X5", age: 22, "born": "2020-12-03", "ismirc": true, "city": 2 },

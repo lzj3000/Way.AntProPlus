@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Row, Col, Card, Modal, Tabs } from 'antd';
+import { Form, Row, Col, Card, Tabs } from 'antd';
 import { ChildModelAttribute, ModelAttribute, SearchItem, TableData, WayFieldAttribute } from '../Attribute'
 import WayTextBox, { WayTextBoxProps } from '../WayTextBox'
 import { FormItemProps, FormInstance } from 'antd/lib/form';
 import WayEditTable from './edittable';
-import { values } from 'lodash';
-import { bool, number } from 'prop-types';
 import DragModal from './window';
 
 
@@ -74,18 +72,16 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
                     <Form.Item {...item}>
                         <WayTextBox {...txtprops} attr={field}
                             onSearchBefore={(item, callback) => {
-                                item.field = field
                                 if (props.onSearchData != undefined) {
                                     props.onSearchData(item, (data) => {
                                         callback(data.model, data)
                                     })
                                 }
                             }} onSearchData={(item, callback) => {
-                                item.field = field
                                 if (props.onSearchData) {
                                     props.onSearchData(item, callback)
                                 }
-                            }} />
+                            }} >{values}</WayTextBox>
                     </Form.Item>
                 </Col>
             )
@@ -187,6 +183,7 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
     function renderForm() {
         return (<Form form={form}
             onFinish={(formvalues) => {
+                console.log(formvalues)
                 var res = getFormValue(formvalues)
                 if (props.onFinish != undefined) {
                     props.onFinish(res)

@@ -34,43 +34,61 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     const [loading, setLoading] = useState(props.loading ?? false)
     const [data, setData] = useState(props.data ?? { rows: [], total: 0 })
     const [rowedit, setRowedit] = useState(props.rowedit ?? false)
+
     useEffect(() => {
         setData(props.data ?? { rows: [], total: 0 })
         setSelectedRowKeys([])
     }, [props.data])
     useEffect(() => {
-        console.log('WayTable.useEffect.rowedit' + "=" + String(props.rowedit))
-        setRowedit(props.rowedit)
+        setRowedit(props.rowedit ?? false)
     }, [props.rowedit])
-    function getcolumns(attr: ModelAttribute) {
-        var cols = []
+
+    const getColumns = (attr: ModelAttribute) => {
+        var cols: any = []
+        function columnToDisplay(text: any, item: WayFieldAttribute, record: any) {
+            var data = text
+            if (item.comvtp?.isvtp) {
+                var mmap: Map<Number, string> = new Map(item.comvtp.items)
+                data = mmap.get(text)
+            }
+            if (item.foreign?.isfkey) {
+                if (record[item.foreign.OneObjecFiled])
+                    data = record[item.foreign.OneObjecFiled][item.foreign.OneDisplayName]
+            }
+            if (item.type == 'boolean')
+                data = (data) ? "是" : "否"
+            if (props.onFieldRender != undefined) {
+                return props.onFieldRender(item, data, record)
+            }
+            return <>{data}</>
+        }
+        function columnToEdit(item: any, record: any) {
+            const [editvalue, setEditValue] = useState(record[item.field])
+            return <WayTextBox attr={item} value={editvalue} onChange={(value) => {
+                if (props.onRowDataChangeing != undefined) {
+                    if (!props.onRowDataChangeing(record, item.field, value)) return
+                }
+                record[item.field] = value
+                setEditValue(value)
+            }}
+                onSearchBefore={(item: SearchItem, callback) => {
+                    if (props.onSearchData) {
+                        props.onSearchData(item, (data) => {
+                            callback(data.model, data)
+                        })
+                    }
+                }}
+                onSearchData={props.onSearchData}
+            />
+        }
         attr?.fields?.filter((field) => field.visible).forEach((item) => {
             cols.push({
                 dataIndex: item.field, title: item.title, sorter: true, render: (text: any, record: any) => {
                     if (record == undefined) return
                     if (rowedit && record.editable) {
-                        const [rv, setrv] = useState(record[item.field])
-                        return <WayTextBox value={rv} onChange={(value) => {
-                            setrv((v) => {
-                                if (props.onRowDataChangeing != undefined) {
-                                    if (!props.onRowDataChangeing(record, item.field, value)) return value
-                                }
-                                record[item.field] = value
-                                return value
-                            })
-                        }} attr={item} />
+                        return columnToEdit(item, record)
                     } else {
-                        var data = text
-                        if (item.comvtp?.isvtp) {
-                            var mmap: Map<Number, string> = new Map(item.comvtp.items)
-                            data = mmap.get(text)
-                        }
-                        if (item.type == 'boolean')
-                            data = (data) ? "是" : "否"
-                        if (props.onFieldRender != undefined) {
-                            return props.onFieldRender(item, data, record)
-                        }
-                        return <>{data}</>
+                        return columnToDisplay(text, item, record)
                     }
                 }
             })
@@ -78,6 +96,17 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         return cols
     }
     const handleTableChange = (pagination: TablePaginationConfig, filters: Record<string, any[] | null>, sorter: SorterResult<any> | SorterResult<any>[]) => {
+        const setLoaded = (data: TableData) => {
+            setLoading(false)
+            setData(data)
+        }
+        const getsort = (sort: SorterResult<any>): string => {
+            if (sort.column == undefined) return ''
+            var ss = sort.field
+            if (sort.order == "descend")
+                ss = ss + " desc"
+            return ss
+        }
         setLoading(true)
         try {
             var item: SearchItem = {
@@ -107,27 +136,23 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             setLoading(false)
         }
     }
-    const setLoaded = (data: TableData) => {
-        setLoading(false)
-        setData(data)
-    }
-    function getsort(sort: SorterResult<any>): string {
-        if (sort.column == undefined) return ''
-        var ss = sort.field
-        if (sort.order == "descend")
-            ss = ss + " desc"
-        return ss
-    }
+
     const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([])
     const [selectType, setSelectType] = useState<string | "checkbox" | "radio">(props.selectType ?? "checkbox")
     const [selectTitle, setSelectTitle] = useState<JSX.Element | null>((props.selectType != null && props.selectType == 'radio') ? radiobutton() : null)
     const onSelectChange = (keys: any[], selectedRows: Object[]) => {
-        console.log('selectedRowKeys changed: ', keys);
         var selected = selectedRowKeys.length <= keys.length
         setSelectedRowKeys(keys)
         if (props.onSelectRows != undefined) {
             if (keys.length > 0) {
-                props.onSelectRows(selectedRows[selectedRows.length - 1], keys, selected)
+                var row = selectedRows[selectedRows.length - 1]
+                if (!selected) {
+                    row = null
+                    if (keys.length == 1) {
+                        row = data.rows.find(r => r.id == keys[0])
+                    }
+                }
+                props.onSelectRows(row, keys, selected)
             } else {
                 props.onSelectRows(null, keys, false)
             }
@@ -141,7 +166,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             fixed: true,
             type: selectType,
             columnTitle: selectTitle,
-            columnWidth:'60px',
+            columnWidth: '60px',
             selections: [
                 {
                     key: 'invert',
@@ -265,7 +290,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         return (<Table
             bordered={true}
             rowKey="id"
-            columns={getcolumns(props.attr)}
+            columns={getColumns(props.attr)}
             rowSelection={rowSelection()}
             dataSource={data.rows}
             pagination={{ current: 1, pageSize: 10, total: data.total }}
