@@ -55,7 +55,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
     })
     useEffect(() => {
         if (props.attr?.foreign != undefined && props.attr.foreign.isfkey) {
-            if (searchValue.row == undefined && props.children != undefined) {
+            if (searchValue.row == undefined && props.children != undefined && props.value != undefined) {
                 setSearchRowToValue(props.children[props.attr.foreign.OneObjecFiled])
             }
         }
@@ -71,11 +71,6 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         placeholder: '',
         disabled: props.disabled ?? false,
         style: { width: '100%' }
-        // onPressEnter: (event: any) => {
-        //     if (props.onPressEnter != undefined)
-        //         props.onPressEnter(event.currentTarget.value)
-        // }
-
     }
     for (var n in defaultProps) {
         if (props.options != undefined && props.options[n] != undefined) {
