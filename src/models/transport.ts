@@ -1,75 +1,21 @@
 import { DefaultModelType } from '@/components/WayPage/defaultModel';
 import request from '@/utils/request';
-const WayModel: DefaultModelType = {
-    namespace: 'transport',
-    state: {
-        model: null,
-        result: {
-            success: true,
-            code: 200,
-            result: null,
-            message: ''
-        }
-    },
-    effects: {
-        *init(args, { call, put }) {
-            const result = yield call(async () => await request(`/api/${args.payload}/view`, {
-                method: 'GET'
-            }))
-            yield put({ type: "inited", value: result })
-        },
-        *search(args, { call, put }) {
-            var item = args.payload.item
-            item.pageindex = item.page
-            item.pagesize = item.size
-            item.searchType = 0
-            if (item.field && item.foreign) {//外键查询
-                item.foreignfield = item.field
-                item.searchType = 1
-            }
-            if (item.parent && item.childmodel) {//子集查询
-                item.detailname = item.childmodel.name
-                item.searchType = 2
-            }
-            const result = yield call(async () => await request(`/api/${args.payload.c}/find`, {
-                method: 'POST',
-                data: item
-            }))
-            if (item.searchType > 0) {
-                return result
-            }
-            console.log(result)
-            yield put({ type: "searched", value: result })
-        },
-        *execute(args, { call, put }) {
-            var command = args.payload.command
-            if (command == 'add') {
-                command = "Create"
-            }
-            if (command == 'edit') {
-                command = "Update"
-            }
-            if (command == 'remove') {
-                command = "Remove"
-            }
-            const result = yield call(async () => await request(`/api/${args.payload.c}/${command}`, {
-                method: 'POST',
-                data: args.payload.item
-            }))
-            return result
-            // yield put({ type: "executed", value: result })
-        }
-    },
-    reducers: {
-        inited(state, action) {
-            var obj = { ...state }
-            console.log(action.value)
-            var result = action.value.result
-            obj.model = {}
-            obj.model.name = result.name
-            obj.model.title = result.title
-            obj.model.commands = result.commands
-            obj.model.commands?.forEach((cmd) => {
+
+const resultToModel = (result) => {
+    console.log(result)
+    var res = { success: result.success, data: null, message: result.message }
+    if (res.success) {
+        res.data = { rows: result.result.list, total: result.result.total }
+        if (!result.result.view) return res
+        var view = result.result.view
+        if (!view.modelview)
+            view.modelview = result.result.view
+        if (view) {
+            var model = {}
+            model.name = view.name
+            model.title = view.title
+            model.commands = view.commands
+            model.commands?.forEach((cmd) => {
                 if (cmd.command == "Create")
                     cmd.command = "add"
                 if (cmd.command == "Update")
@@ -77,29 +23,105 @@ const WayModel: DefaultModelType = {
                 if (cmd.command == "Remove")
                     cmd.command = "remove"
             })
-            obj.model.fields = result.modelview.childitem
-            obj.model.fields?.forEach((item) => {
-                item.field = item.field?.toLocaleLowerCase()
-                if (item.comvtp && item.comvtp.isvtp) {
-                    var array = new Map<Number, String>()
-                    for (var i in item.comvtp.items) {
-                        array.set(Number(i), item.comvtp.items[i])
-                    }
-                    item.comvtp.items = array
-                }
+            model.fields = itemToField(view.modelview.childitem)
+            model.childmodels = view.modelview.childmodel
+            model.childmodels.forEach((cm) => {
+                cm.fields = itemToField(cm.childitem)
             })
-            obj.model.childmodels = result.modelview.childmodel
+            res.data.model = model
+        }
+    }
+    return res
+}
+const itemToField = (items: any[]) => {
+    items.forEach((item) => {
+        item.field = item.field?.toLocaleLowerCase()
+        if (item.comvtp && item.comvtp.isvtp) {
+            var array = new Map<Number, String>()
+            for (var i in item.comvtp.items) {
+                array.set(Number(i), item.comvtp.items[i])
+            }
+            item.comvtp.items = array
+        }
+        if (item.foreign && item.foreign.isfkey) {
+            for (var i in item.foreign) {
+                if (typeof item.foreign[i] == 'string') {
+                    item.foreign[i] = item.foreign[i].toLocaleLowerCase()
+                }
+            }
+        }
+    })
+    return items
+}
+const WayModel: DefaultModelType = {
+    namespace: 'transport',
+    state: {
+    },
+    effects: {
+        *init(args, { call, put }) {
+            const result = yield call(async () => await request(`/api/${args.payload}/view`, {
+                method: 'GET'
+            }))
+            result.result.view = result.result
+            var obj = resultToModel(result)
             return obj
+        },
+        *search(args, { call, put }) {
+            var item = args.payload.item
+            item.pageindex = item.page ?? 1
+            item.pagesize = item.size ?? 10
+            item.searchType = 0
+            if (item.sortList) {
+                item.OrderbyList = item.sortList
+            }
+            console.log(item)
+            item.IsShape = false
+            if (item.field && item.foreign) {//外键查询
+                item.foreignfield = item.field.field
+                item.searchType = 4
+            }
+            if (item.parent && item.childmodel) {//子集查询
+                item.detailname = item.childmodel.propertyname
+                item.searchType = 2
+                item.findId = item.parent.id
+                console.log(item)
+            }
+            const result = yield call(async () => await request(`/api/${args.payload.c}/find`, {
+                method: 'POST',
+                data: item
+            }))
+            return resultToModel(result)
+        },
+        *execute(args, { call, put }) {
+            var command = args.payload.command
+            var m = "POST"
+            if (command == 'add') {
+                command = ""
+            }
+            if (command == 'edit') {
+                command = args.payload.item.id
+                m = "PUT"
+            }
+            if (command == 'remove') {
+                command = ""
+                m = "DELETE"
+            }
+            const result = yield call(async () => await request(`/api/${args.payload.c}/${command}`, {
+                method: m,
+                data: args.payload.item
+            }))
+            return result
+        }
+    },
+    reducers: {
+        inited(state, action) {
+            return state
         },
         searched(state, action) {
-            var obj = { ...state }
-            obj.result = action.value
-            return obj
+            return state
         },
         executed(state, action) {
-            var obj = { ...state }
-            obj.result = action.value
-            return obj
+            return state
         }
     }
 }

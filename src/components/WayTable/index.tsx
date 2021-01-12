@@ -4,6 +4,8 @@ import { ChildModelAttribute, ModelAttribute, WayFieldAttribute, SearchItem, Tab
 import { ExpandableConfig, SorterResult, TablePaginationConfig } from 'antd/lib/table/interface';
 import { isArray } from 'lodash';
 import WayTextBox from '../WayTextBox'
+import { models } from '@/.umi/plugin-model/Provider';
+import moment, { isMoment } from 'moment';
 
 
 export interface WayTableProps {
@@ -26,6 +28,7 @@ export interface WayTableProps {
     onRowMouseEnter?: (event: React.MouseEvent<HTMLElement, MouseEvent>, row: object) => void,
     onMouseLeave?: (event: React.MouseEvent<HTMLElement, MouseEvent>, row: object) => void,
     onRowDataChangeing?: (row: any, field: string, value: any) => boolean,
+    onExpandedRowTabPane?: (childmodel: ChildModelAttribute, record: any) => JSX.Element
 }
 
 const TabPane = Tabs.TabPane
@@ -52,11 +55,15 @@ const WayTable: React.FC<WayTableProps> = (props) => {
                 data = mmap.get(text)
             }
             if (item.foreign?.isfkey) {
-                if (record[item.foreign.OneObjecFiled])
-                    data = record[item.foreign.OneObjecFiled][item.foreign.OneDisplayName]
+                var oofiled = item.foreign.oneobjecfiled.toLocaleLowerCase()
+                var odname = item.foreign.onedisplayname.toLocaleLowerCase()
+                if (record[oofiled])
+                    data = record[oofiled][odname]
             }
             if (item.type == 'boolean')
                 data = (data) ? "是" : "否"
+            if (item.type == 'datetime')
+                data = data != "" ? moment(data).format('YYYY-MM-DD').toString() : ""
             if (props.onFieldRender != undefined) {
                 return props.onFieldRender(item, data, record)
             }
@@ -83,7 +90,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         }
         attr?.fields?.filter((field) => field.visible).forEach((item) => {
             cols.push({
-                dataIndex: item.field, title: item.title, sorter: true, width: 150, render: (text: any, record: any) => {
+                dataIndex: item.field, title: item.title, sorter: true, width: 200, render: (text: any, record: any) => {
                     if (record == undefined) return
                     if (rowedit && record.editable) {
                         return columnToEdit(item, record)
@@ -102,9 +109,9 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         }
         const getsort = (sort: SorterResult<any>): string => {
             if (sort.column == undefined) return ''
-            var ss = sort.field
+            var ss = { name: sort.field, isdesc: false }
             if (sort.order == "descend")
-                ss = ss + " desc"
+                ss.isdesc = true
             return ss
         }
         setLoading(true)
@@ -223,18 +230,18 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         }
     }
     function expandable(): ExpandableConfig<Object> | undefined {
-        if (props.isexpandable) {
+        if (props.isexpandable && props?.attr?.childmodels != undefined && props.attr.childmodels.length > 0) {
             if (props.onExpandable == undefined) {
                 return {
                     onExpand: (expanded: any, record: any) => {
                         if (!expanded) return
                         if (props?.attr?.childmodels != undefined && props.attr.childmodels.length > 0) {
                             var cm = props?.attr?.childmodels[0]
-                            if (!record[cm.name]) {
-                                record[cm.name] = []
+                            if (!record[cm.propertyname]) {
+                                record[cm.propertyname] = []
                             }
-                            record[cm.name].total = record[cm.name].length
-                            if (record[cm.name].total == 0) {
+                            record[cm.propertyname].total = record[cm.propertyname].length
+                            if (record[cm.propertyname].total == 0) {
                                 var item: SearchItem = { page: 1, size: 10 }
                                 getchildTable(item, cm, record)
                             }
@@ -256,29 +263,46 @@ const WayTable: React.FC<WayTableProps> = (props) => {
                 var rows = [...data.rows]
                 rows.forEach((r) => {
                     if (r.id == record.id) {
-                        r[cm.name] = cmdata.rows
-                        r[cm.name].total = cmdata.total
+                        r[cm.propertyname] = cmdata.rows
+                        r[cm.propertyname].total = cmdata.total
                     }
                 })
                 setData({ rows: rows, total: data.total })
             })
         }
     }
+    const expandedRowTabPane = (childmodel, record) => {
+        if (props.onExpandedRowTabPane) {
+            var div = props.onExpandedRowTabPane(childmodel, record)
+            if (div != undefined)
+                return div
+        }
+        var pane = {
+            key: 'id',
+            attr: childmodel,
+            isselect: false,
+            isedit: false,
+            data: { rows: record[childmodel.propertyname], total: record[childmodel.propertyname].total },
+            onSearchData: (item: SearchItem) => {
+                getchildTable(item, childmodel, record)
+            }
+        }
+        return (<WayTable {...pane}></WayTable>)
+    }
     const expandedRowRender = (record: any) => {
         if (props?.attr?.childmodels != undefined && props.attr.childmodels.length > 0) {
-            return (<Tabs defaultActiveKey={"0"}>
+            return (<Tabs defaultActiveKey={"0"} onChange={(activeKey) => {
+                var cm = props.attr.childmodels[Number(activeKey)]
+                getchildTable({}, cm, record)
+            }}>
                 {
                     props.attr.childmodels.map((cm, index) => {
-                        if (!record[cm.name])
-                            record[cm.name] = []
-                        record[cm.name].total = record[cm.name].length
+                        if (!record[cm.propertyname])
+                            record[cm.propertyname] = []
+                        record[cm.propertyname].total = record[cm.propertyname].length
                         return (
                             <TabPane tab={cm.title} key={index}>
-                                <WayTable key={"id"} attr={cm} isselect={false} isclosecard={true} data={{ rows: record[cm.name], total: record[cm.name].total }}
-                                    isedit={false} onSearchData={((item: SearchItem) => {
-                                        getchildTable(item, cm, record)
-                                    })}
-                                ></WayTable>
+                                {expandedRowTabPane(cm, record)}
                             </TabPane>
                         )
                     })

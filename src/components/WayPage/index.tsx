@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import WayToolbar from '../WayToolbar'
 import WayTable from '../WayTable'
 import WayForm, { FormPlus } from '../WayForm'
-import { CommandAttribute, ModelAttribute, ResultData, SearchItem, SearchWhere, TableData } from '../Attribute';
+import { ChildModelAttribute, CommandAttribute, ModelAttribute, SearchItem, SearchWhere, TableData } from '../Attribute';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import { CloseCircleOutlined } from '@ant-design/icons';
 
@@ -12,9 +12,8 @@ interface WayPageProps {
     namespace?: string
     controller: string
     title?: string
-    model?: ModelAttribute
-    result?: ResultData
-    onCommandClick?: (command: string) => void
+    onCommandClick?: (command: string) => void,
+    onExpandedRowTabPane?: (childmodel: ChildModelAttribute, record: any) => JSX.Element
 }
 const WayPage: React.FC<WayPageProps> = (props) => {
     const [values, setValues] = useState(null)
@@ -22,30 +21,44 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const [keys, setKeys] = useState([])
     const [model, setModel] = useState<ModelAttribute | undefined>(undefined)
     const [data, setData] = useState({ rows: [], total: 0 })
-
     var form: FormPlus = null
+
     useEffect(() => {
-        setModel(null)
-        props.init()
+        init()
     }, [])
     useEffect(() => {
-        if (props.result != undefined) {
-            if (props.result.success != true) {
-                resultMessage(props.result.message)
+        setModel(undefined)
+        setValues(null)
+        setSelectCount(0)
+        setKeys([])
+        setData({ rows: [], total: 0 })
+        init()
+    }, [props.controller])
+
+    if (model == undefined) { return (<></>) }
+    function init() {
+        props.init().then((result) => {
+            if (result.success) {
+                setModel(result.data.model)
+                // searchDataThan(searchItem,(data)=>{
+                //     setData(data)
+                // })
+            } else {
+                resultMessage(result.message)
             }
-            else {
-                if (props.result.result) {
-                    var res = props.result.result
-                    console.log(res)
-                    setData({ rows: res.list, total: res.total })
-                }
+        })
+    }
+    function searchDataThan(item: SearchItem, callback: (data: TableData) => void) {
+        props.search(item).then(result => {
+            if (result != undefined && result.success) {
+                if (result.data.rows == null)
+                    result.data.rows = []
+                callback(result.data)
+            } else {
+                resultMessage(result.message)
             }
-        }
-    }, [props.result])
-    useEffect(() => {
-        setModel(props.model)
-    }, [props.model])
-    if (props.model == null) { return (<></>) }
+        })
+    }
 
     var searchItem: SearchItem = {
         page: 1,
@@ -53,9 +66,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         whereList: [],
         sortList: [],
     }
-    const searchData = () => {
-        props.search(searchItem)
-    }
+
     const executeCommand = (command: CommandAttribute) => {
         var item = null
         if (command.isselectrow)
@@ -67,26 +78,13 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const executeCommandData = (command: CommandAttribute, values: any) => {
         props.execute(command.command, values).then((result) => {
             if (result != undefined && result.success) {
-                searchData()
+                searchDataThan(searchItem, (data) => { setData(data) })
             } else {
                 resultMessage(result.message)
             }
         })
     }
-    const searchDataThan = (item: SearchItem, callback: (data: TableData) => void) => {
-        props.search(item).then(result => {
-            if (result != undefined && result.success) {
-                var data = {}
-                if (result.result.view)
-                    data.model = result.result.view
-                data.rows = result.result.list ?? []
-                data.total = result.result.total
-                callback(data)
-            } else {
-                resultMessage(result.message)
-            }
-        })
-    }
+
     const resultMessage = (message: string) => {
         Modal.error({
             visible: true,
@@ -111,6 +109,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                         form.setHideSearch(false)
                     }
                     form.onFinish = (values) => {
+                        console.log(values)
                         executeCommandData(command, values)
                     }
                 } else {
@@ -123,7 +122,9 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                     if (w != undefined)
                         searchItem.whereList = [w]
                     searchItem.page = 1
-                    searchData()
+                    searchDataThan(searchItem, (data) => {
+                        setData(data)
+                    })
                 },
                 onSearchData: searchDataThan
             }}
@@ -137,12 +138,19 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                     setSelectCount(keys.length)
                     setValues(row)
                 }}
-                onSearchData={(item) => {
-                    searchItem.page = item.page
-                    searchItem.size = item.size
-                    searchItem.sortList = item.sortList
-                    searchData()
+                onSearchData={(item,callback) => {
+                    if (item.parent && item.childmodel){
+                        searchDataThan(item, (data) => {
+                            callback(data)
+                        })
+                        return
+                    }
+                    item.whereList=searchItem.whereList
+                    searchDataThan(item, (data) => {
+                        setData(data)
+                    })
                 }}
+                onExpandedRowTabPane={props.onExpandedRowTabPane}
             ></WayTable>)
     }
     function renderForm() {
@@ -165,10 +173,7 @@ function mapStateToProps(state: any, ownProps: WayPageProps) {
     let innerState = state.waydefault
     if (ownProps.namespace != undefined)
         innerState = state[ownProps.namespace]
-    var mstp = { model: innerState.model, result: innerState.result, title: ownProps.title }
-    if (mstp.title == undefined && mstp.model != null) {
-        mstp.title = mstp.model.title
-    }
+    var mstp = { result: innerState.result, title: ownProps.title }
     return mstp
 }
 function mapDispatchToProps(dispatch: any, ownProps: WayPageProps) {

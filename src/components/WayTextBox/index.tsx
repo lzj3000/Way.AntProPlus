@@ -56,7 +56,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
     useEffect(() => {
         if (props.attr?.foreign != undefined && props.attr.foreign.isfkey) {
             if (searchValue.row == undefined && props.children != undefined && props.value != undefined) {
-                setSearchRowToValue(props.children[props.attr.foreign.OneObjecFiled])
+                setSearchRowToValue(props.children[props.attr.foreign.oneobjecfiled.toLocaleLowerCase()])
             }
         }
     }, [props.value])
@@ -181,16 +181,21 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         return value
     }
     function setSearchRowToValue(row: any) {
+        console.log(row)
+        console.log(attr?.foreign)
         var obj = {}
         if (row != null) {
+            var fv: String = attr?.foreign?.oneobjecfiledkey ?? ""
+            var ft: string = attr?.foreign?.onedisplayname ?? ""
             obj.row = row
-            obj.value = row[attr?.foreign?.OneObjecFiledKey]
-            obj.text = row[attr?.foreign?.OneDisplayName]
+            obj.value = row[fv.toLocaleLowerCase()]
+            obj.text = row[ft.toLocaleLowerCase()]
         } else {
             obj.value = ''
             obj.text = ''
             obj.row = undefined
         }
+        console.log(obj)
         setSearchValue(obj)
         setValue(obj.value)
     }

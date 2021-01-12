@@ -40,7 +40,7 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
     var option = [{ label: '全部', value: '*' }]
     if (props.fields != undefined) {
         props.fields.forEach((item) => {
-            var child = symbolType.get(item.type)
+            var child = item.searchsymbol ?? symbolType.get(item.type)
             option.push({ label: item.title, value: item.field, children: child })
         })
     }

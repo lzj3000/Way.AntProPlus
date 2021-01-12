@@ -51,7 +51,7 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     }
     const defaultAdd = () => {
         console.log('add')
-        var row = { id: moment().valueOf(), isnew: true, editable: true }
+        var row = { id: moment().valueOf(), isnew: true, editable: true, state: 4 }
         props.model?.fields?.forEach(field => {
             if (field.field != undefined)
                 row[field.field] = null
@@ -152,7 +152,8 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                     fields: props.model?.fields,
                     onSearch: (w: SearchWhere) => {
                         searchItem.whereList = []
-                        searchItem.whereList.push(w)
+                        if (w != undefined)
+                            searchItem.whereList.push(w)
                         searchItem.page = 1
                         searchItem.sortList = []
                         if (props.onSearchData != undefined) {

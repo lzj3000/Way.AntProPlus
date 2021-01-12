@@ -41,6 +41,7 @@ export interface NoticeIconProps {
 }
 
 const NoticeIcon: React.FC<NoticeIconProps> & {
+  
   Tab: typeof NoticeList;
 } = (props) => {
   const getNotificationBox = (): React.ReactNode => {
@@ -113,16 +114,17 @@ const NoticeIcon: React.FC<NoticeIconProps> & {
   }
 
   return (
-    <HeaderDropdown
-      placement="bottomRight"
-      overlay={notificationBox}
-      overlayClassName={styles.popover}
-      trigger={['click']}
-      visible={visible}
-      onVisibleChange={setVisible}
-    >
-      {trigger}
-    </HeaderDropdown>
+    <></>
+    // <HeaderDropdown
+    //   placement="bottomRight"
+    //   overlay={notificationBox}
+    //   overlayClassName={styles.popover}
+    //   trigger={['click']}
+    //   visible={visible}
+    //   onVisibleChange={setVisible}
+    // >
+    //   {trigger}
+    // </HeaderDropdown>
   );
 };
 

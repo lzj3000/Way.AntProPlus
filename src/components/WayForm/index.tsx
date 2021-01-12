@@ -123,11 +123,11 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
         form.setFieldsValue(values)
         if (formModel.models != undefined && formModel.models?.length > 0) {
             formModel.models.forEach((cm) => {
-                if (!values[cm.name]) {
-                    values[cm.name] = []
-                    values[cm.name].total = 0
+                if (!values[cm.propertyname]) {
+                    values[cm.propertyname] = []
+                    values[cm.propertyname].total = 0
                 } else {
-                    values[cm.name].total = values[cm.name].length
+                    values[cm.propertyname].total = values[cm.propertyname].length
                 }
                 cm.removeRows = []
             })
@@ -139,9 +139,9 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
         form.resetFields()
         var old = {}
         formModel.models?.forEach((cm) => {
-            if (!old[cm.name]) {
-                old[cm.name] = []
-                old[cm.name].total = 0
+            if (!old[cm.propertyname]) {
+                old[cm.propertyname] = []
+                old[cm.propertyname].total = 0
             }
         })
         setValues(old)
@@ -175,7 +175,7 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
             formModel.models.forEach((cm) => {
                 cm.removeRows?.forEach((row) => {
                     row.state = 3
-                    res[cm.name].push(row)
+                    res[cm.propertyname].push(row)
                 })
             })
         }
@@ -202,22 +202,22 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
                 {formModel.models?.map((cm, index) => {
                     return (
                         <TabPane tab={cm.title} key={index}>
-                            <WayEditTable model={cm} data={{ rows: values[cm.name], total: values[cm.name]?.total }} iscirclebutton={true} closetoolbar={closeToolbar} closesearch={closeSearch} onSearchData={(item) => {
+                            <WayEditTable model={cm} data={{ rows: values[cm.propertyname], total: values[cm.propertyname]?.total }} iscirclebutton={true} closetoolbar={closeToolbar} closesearch={closeSearch} onSearchData={(item) => {
                                 if (props.onSearchData != undefined) {
                                     item.parent = values
                                     item.childmodel = cm
                                     props.onSearchData(item, (data: TableData) => {
                                         var row = Object.assign({}, values)
-                                        row[cm.name] = data.rows
-                                        row[cm.name].total = data.total
+                                        row[cm.propertyname] = data.rows
+                                        row[cm.propertyname].total = data.total
                                         setValues(row)
                                     })
                                 }
                             }}
                                 onDataChange={(data, row, type) => {
                                     var vvv = Object.assign({}, values)
-                                    vvv[cm.name] = data.rows
-                                    vvv[cm.name].total = data.total
+                                    vvv[cm.propertyname] = data.rows
+                                    vvv[cm.propertyname].total = data.total
                                     if (type == 'remove') {
                                         row.forEach((r) => {
                                             if (!r.isnew)
