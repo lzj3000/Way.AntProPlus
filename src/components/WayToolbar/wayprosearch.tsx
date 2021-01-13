@@ -51,7 +51,9 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
         })
     }
     function renderCascader() {
-        return (<Cascader style={{ width: '35%' }} options={option} allowClear={false} defaultValue={['*']} onChange={(value) => {
+        return (<Cascader style={{ width: '35%' }} options={option} allowClear={false} defaultValue={['*']} 
+        expandTrigger={'hover'}
+        onChange={(value) => {
             console.log(value)
             var name = value[0]
             var field = props.fields?.find((item) => item.field == name)
