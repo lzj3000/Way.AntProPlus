@@ -2,7 +2,6 @@ import { DefaultModelType } from '@/components/WayPage/defaultModel';
 import request from '@/utils/request';
 
 const resultToModel = (result) => {
-    console.log(result)
     var res = { success: result.success, data: null, message: result.message }
     if (res.success) {
         res.data = { rows: result.result.list, total: result.result.total }
@@ -64,6 +63,7 @@ const WayModel: DefaultModelType = {
             }))
             result.result.view = result.result
             var obj = resultToModel(result)
+           
             return obj
         },
         *search(args, { call, put }) {

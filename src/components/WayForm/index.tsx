@@ -101,6 +101,9 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
             form.show = () => {
                 setModalShow(true)
             }
+            form.hide=()=>{
+                setModalShow(false)
+            }
             form.setValues = (values: any) => {
                 setValues(setFormValues(values))
             }

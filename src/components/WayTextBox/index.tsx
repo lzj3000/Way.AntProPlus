@@ -3,7 +3,7 @@ import useMergeValue from 'use-merge-value';
 
 import { DatePicker, Input, InputNumber, Select, Switch } from 'antd';
 import moment from 'moment';
-import { isMap, isNumber } from 'lodash';
+import { isArray, isMap, isNumber } from 'lodash';
 import { ModelAttribute, SearchItem, TableData, WayFieldAttribute } from '../Attribute'
 import WayEditTable from '../WayForm/edittable';
 
@@ -43,6 +43,9 @@ export interface WayTextBoxProps {
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
 }
 const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
+    const [defaultProps, setDefaultProps] = useState(() => {
+        return gettextProps()
+    })
     const [searchModal, setSearchModal] = useState({
         isshow: false,
         model: undefined,
@@ -54,39 +57,54 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         text: ''
     })
     useEffect(() => {
-        if (props.attr?.foreign != undefined && props.attr.foreign.isfkey) {
-            if (searchValue.row == undefined && props.children != undefined && props.value != undefined) {
-                setSearchRowToValue(props.children[props.attr.foreign.oneobjecfiled.toLocaleLowerCase()])
+        setDefaultProps(gettextProps())
+    }, [props.options])
+    useEffect(() => {
+        if (searchValue.row != undefined) {
+            setSearchRowToValue(null)
+        }
+        setDefaultProps(gettextProps())
+    }, [props.attr])
+    useEffect(() => {
+        if (props.attr?.foreign != undefined && props.attr.foreign.isfkey && props.children != undefined) {
+            if (searchValue.row == undefined && props.value != undefined) {
+                var row = props.children[props.attr.foreign.oneobjecfiled.toLocaleLowerCase()]
+                setSearchRowToValue(row)
             }
         }
     }, [props.value])
-    const defaultProps = {
-        autoFocus: false,
-        maxLength: 500,
-        prefix: '',
-        size: 'middle',
-        suffix: '',
-        type: 'text',
-        allowClear: true,
-        placeholder: '',
-        disabled: props.disabled ?? false,
-        style: { width: '100%' }
-    }
-    for (var n in defaultProps) {
-        if (props.options != undefined && props.options[n] != undefined) {
-            defaultProps[n] = props.options[n]
+    function gettextProps() {
+        var prop = {
+            autoFocus: false,
+            maxLength: 500,
+            prefix: '',
+            size: 'middle',
+            suffix: '',
+            type: 'text',
+            allowClear: true,
+            placeholder: '',
+            disabled: props.disabled ?? false,
+            style: { width: '100%' },
+            texttype: TextType.Input
         }
+        for (var n in prop) {
+            if (props.options != undefined && props.options[n] != undefined) {
+                prop[n] = props.options[n]
+            }
+        }
+        if (props.width != undefined)
+            prop.style.width = props.width
+        prop.texttype = getTextType(prop)
+        return prop
     }
-    if (props.width != undefined)
-        defaultProps.style.width = props.width
-    var { textType, attr } = props
-    setTextType(attr);
-    function setTextType(attr: WayFieldAttribute | undefined) {
+    function getTextType(prop): TextType {
+        var { textType, attr } = props
         if (attr != undefined) {
             if (attr.type == "int" || attr.type == "int32" || attr.type == "int64" || attr.type == "decimal") {
                 textType = TextType.InputNumber
-                if (attr.pointlength != undefined && attr.pointlength > 0)
-                    defaultProps["precision"] = attr.pointlength
+                if (attr.pointlength != undefined && attr.pointlength > 0) {
+                    prop.precision = attr.pointlength
+                }
             }
             if (attr.type == "datetime") {
                 textType = TextType.DatePicker
@@ -96,7 +114,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 if (props.search) {
                     textType = TextType.Select
                     var items: { label: string; value: boolean; }[] = [{ label: '是', value: true }, { label: '否', value: false }]
-                    defaultProps["options"] = items
+                    prop.options = items
                 }
             }
             if (attr.comvtp != undefined && attr.comvtp.isvtp) {
@@ -107,35 +125,39 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 attr.comvtp.items.forEach((v, k) => {
                     items.push({ label: v, value: k })
                 })
-                defaultProps["options"] = items
+                prop.options = items
             }
             if (attr.foreign != undefined && attr.foreign.isfkey) {
                 textType = TextType.Search
             }
             if (attr.length != undefined && attr.length > 0)
-                defaultProps.maxLength = attr.length
+                prop.maxLength = attr.length
             if (props.disabled == undefined && attr.disabled != undefined) {
-                defaultProps.disabled = attr.disabled
+                prop.disabled = attr.disabled
             }
             if (props.search) {
-                defaultProps.disabled = false
+                prop.disabled = false
             }
         }
         if (textType == undefined) {
             textType = TextType.Input;
         }
+        return textType
     }
     const [value, setValue] = useMergeValue<any | undefined>(props.defaultValue, {
         value: anyToObject(props.value),
         onChange: (value, prevValue) => {
             if (props.onChange != undefined) {
+                console.log(value)
                 var vvv = anyToString(value)
+                console.log(vvv)
                 props.onChange(vvv)
             }
         },
     });
     function anyToObject(value: any) {
-        switch (textType) {
+        console.log(value)
+        switch (defaultProps.texttype) {
             case TextType.InputNumber:
                 if (value == null || value == undefined)
                     return null
@@ -148,29 +170,22 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 if (typeof value == "string") {
                     if (value == '')
                         return null
-                    if (props.search) {
-                        var items = value.split("===")
-                        var dates = []
-                        items.forEach((d) => {
-                            dates.push(moment(d, 'YYYY-MM-DD'))
-                        })
-                        return dates
-                    }
                     return moment(value, 'YYYY-MM-DD')
-                } else
-                    return moment(value)
+                } else {
+                    if (!isArray(value))
+                        return moment(value)
+                }
         }
         return value
     }
     function anyToString(value: any) {
-        switch (textType) {
+        switch (defaultProps.texttype) {
             case TextType.DatePicker:
                 if (value != null || value != undefined) {
-                    if (props.search) {
-                        return value[0].format('YYYY-MM-DD').toString() + "===" + value[1].format('YYYY-MM-DD').toString()
-                    } else
+                    if (!isArray(value))
                         return value.format('YYYY-MM-DD').toString()
                 }
+                return value
             case TextType.InputNumber:
                 if (value == null)
                     return null
@@ -181,21 +196,14 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         return value
     }
     function setSearchRowToValue(row: any) {
-        console.log(row)
-        console.log(attr?.foreign)
-        var obj = {}
-        if (row != null) {
-            var fv: String = attr?.foreign?.oneobjecfiledkey ?? ""
-            var ft: string = attr?.foreign?.onedisplayname ?? ""
+        var obj = { value: '', text: '', row: undefined }
+        if (row) {
+            var valueProp: String = props.attr?.foreign?.oneobjecfiledkey ?? ""
+            var textProp: string = props.attr?.foreign?.onedisplayname ?? ""
             obj.row = row
-            obj.value = row[fv.toLocaleLowerCase()]
-            obj.text = row[ft.toLocaleLowerCase()]
-        } else {
-            obj.value = ''
-            obj.text = ''
-            obj.row = undefined
+            obj.value = row[valueProp.toLocaleLowerCase()]
+            obj.text = row[textProp.toLocaleLowerCase()]
         }
-        console.log(obj)
         setSearchValue(obj)
         setValue(obj.value)
     }
@@ -206,7 +214,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
             value={searchValue.text}
             onSearch={(value) => {
                 if (props.onSearchBefore != undefined) {
-                    var item = { foreign: attr?.foreign, value: value, field: attr }
+                    var item = { foreign: props.attr?.foreign, value: value, field: props.attr }
                     props.onSearchBefore(item, (model, data) => {
                         setSearchModal({
                             isshow: true,
@@ -227,8 +235,8 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                     setSearchRowToValue(row)
                 }}
                 onSearchData={(item: SearchItem, callback) => {
-                    item.field = attr
-                    item.foreign = attr?.foreign
+                    item.field = props.attr
+                    item.foreign = props.attr?.foreign
                     if (props.onSearchData != undefined) {
                         props.onSearchData(item, callback)
                     }
@@ -255,9 +263,10 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
     function renderDate() {
         if (props.search) {
             return (<RangePicker
-                {...defaultProps}
                 size={'middle'}
+                style={defaultProps.style}
                 value={value}
+                allowEmpty={[true,true]}
                 picker={props.options?.picker}
                 onChange={setValue}>
             </RangePicker>);
@@ -281,7 +290,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
         </InputNumber>);
     }
     function render() {
-        switch (textType) {
+        switch (defaultProps.texttype) {
             case TextType.InputNumber:
                 return renderNumber()
             case TextType.DatePicker:
