@@ -63,6 +63,7 @@ const WayModel: DefaultModelType = {
             }))
             result.result.view = result.result
             var obj = resultToModel(result)
+           
             return obj
         },
         *search(args, { call, put }) {

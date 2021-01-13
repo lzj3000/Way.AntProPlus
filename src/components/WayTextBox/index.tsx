@@ -266,6 +266,7 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 size={'middle'}
                 style={defaultProps.style}
                 value={value}
+                allowEmpty={[true,true]}
                 picker={props.options?.picker}
                 onChange={setValue}>
             </RangePicker>);

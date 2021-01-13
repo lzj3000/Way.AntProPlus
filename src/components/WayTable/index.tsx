@@ -45,7 +45,9 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     useEffect(() => {
         setRowedit(props.rowedit ?? false)
     }, [props.rowedit])
-
+    useEffect(() => {
+        setLoading(props.loading ?? false)
+    }, [props.loading])
     const getColumns = (attr: ModelAttribute) => {
         var cols: any = []
         function columnToDisplay(text: any, item: WayFieldAttribute, record: any) {
@@ -62,8 +64,13 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             }
             if (item.type == 'boolean')
                 data = (data) ? "是" : "否"
-            if (item.type == 'datetime')
-                data = data != "" ? moment(data).format('YYYY-MM-DD').toString() : ""
+            if (item.type == 'datetime') {
+                var fm = 'YYYY-MM-DD'
+                if (item.title?.indexOf('时间') > -1) {
+                    fm = 'YYYY-MM-DD hh:mm'
+                }
+                data = data != "" ? moment(data).format(fm).toString() : ""
+            }
             if (props.onFieldRender != undefined) {
                 return props.onFieldRender(item, data, record)
             }
@@ -90,7 +97,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         }
         attr?.fields?.filter((field) => field.visible).forEach((item) => {
             cols.push({
-                dataIndex: item.field, title: item.title, sorter: true, width: 200, render: (text: any, record: any) => {
+                dataIndex: item.field, title: item.title, sorter: true, render: (text: any, record: any) => {
                     if (record == undefined) return
                     if (rowedit && record.editable) {
                         return columnToEdit(item, record)

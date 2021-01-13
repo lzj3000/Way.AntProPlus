@@ -8,6 +8,7 @@ import { ChildModelAttribute, CommandAttribute, ModelAttribute, SearchItem, Sear
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { isArray } from 'lodash';
+import { PageLoading } from '@ant-design/pro-layout';
 
 interface WayPageProps {
     namespace?: string
@@ -17,6 +18,7 @@ interface WayPageProps {
     onExpandedRowTabPane?: (childmodel: ChildModelAttribute, record: any) => JSX.Element
 }
 const WayPage: React.FC<WayPageProps> = (props) => {
+    const [loading, setLoading] = useState(false)
     const [values, setValues] = useState(null)
     const [selectCount, setSelectCount] = useState(0)
     const [keys, setKeys] = useState([])
@@ -41,14 +43,18 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         props.init().then((result) => {
             if (result.success) {
                 setModel(result.data.model)
-                setData(result.data)
+                searchDataThan({}, (data) => {
+                    setData(data)
+                })
             } else {
                 resultMessage(result.message)
             }
         })
     }
     function searchDataThan(item: SearchItem, callback: (data: TableData) => void) {
+        setLoading(true)
         props.search(item).then(result => {
+            setLoading(false)
             if (result != undefined && result.success) {
                 if (result.data.rows == null)
                     result.data.rows = []
@@ -149,7 +155,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }
     function renderTable() {
         return (
-            <WayTable attr={model} data={data} isselect={true} isexpandable={true}
+            <WayTable attr={model} data={data} isselect={true} isexpandable={true} loading={loading}
                 onSelectRows={(row, keys, selected) => {
                     setKeys(keys)
                     setSelectCount(keys.length)
