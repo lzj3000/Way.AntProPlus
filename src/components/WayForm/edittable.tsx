@@ -5,6 +5,7 @@ import WayTable from "../WayTable"
 import WayToolbar from "../WayToolbar"
 import moment from 'moment';
 import DragModal from "./window"
+import { isArray } from "lodash"
 
 interface WayEditTableProps {
     model?: ChildModelAttribute,
@@ -152,8 +153,12 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                     fields: props.model?.fields,
                     onSearch: (w: SearchWhere) => {
                         searchItem.whereList = []
-                        if (w != undefined)
-                            searchItem.whereList.push(w)
+                        if (w != undefined) {
+                            if (isArray(w)) {
+                                searchItem.whereList = w
+                            } else
+                                searchItem.whereList = [w]
+                        }
                         searchItem.page = 1
                         searchItem.sortList = []
                         if (props.onSearchData != undefined) {

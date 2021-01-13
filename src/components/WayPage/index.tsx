@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Col, Modal, Row } from 'antd';
+import { Alert, Col, message, Modal, Row } from 'antd';
 import { connect } from 'react-redux'
 import WayToolbar from '../WayToolbar'
 import WayTable from '../WayTable'
@@ -7,6 +7,7 @@ import WayForm, { FormPlus } from '../WayForm'
 import { ChildModelAttribute, CommandAttribute, ModelAttribute, SearchItem, SearchWhere, TableData } from '../Attribute';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import { CloseCircleOutlined } from '@ant-design/icons';
+import { isArray } from 'lodash';
 
 interface WayPageProps {
     namespace?: string
@@ -40,9 +41,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         props.init().then((result) => {
             if (result.success) {
                 setModel(result.data.model)
-                // searchDataThan(searchItem,(data)=>{
-                //     setData(data)
-                // })
+                setData(result.data)
             } else {
                 resultMessage(result.message)
             }
@@ -78,20 +77,34 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const executeCommandData = (command: CommandAttribute, values: any) => {
         props.execute(command.command, values).then((result) => {
             if (result != undefined && result.success) {
-                searchDataThan(searchItem, (data) => { setData(data) })
+                message.success(command.name + "完成");
+                if (form) {
+                    form.hide()
+                }
+                searchDataThan(searchItem, (data) => {
+                    setData(data)
+                })
             } else {
                 resultMessage(result.message)
             }
         })
     }
 
-    const resultMessage = (message: string) => {
-        Modal.error({
-            visible: true,
-            title: '出错了',
-            icon: <CloseCircleOutlined />,
-            content: <div>{message}</div>
-        })
+    const resultMessage = (message: string, success: boolean) => {
+        if (!success) {
+            Modal.error({
+                visible: true,
+                title: '出错了',
+                icon: <CloseCircleOutlined />,
+                content: <div>{message}</div>
+            })
+        } else {
+            Modal.success({
+                visible: true,
+                content: <div>{message}</div>
+            })
+        }
+
     }
     function renderToolbar() {
         return (<WayToolbar attrs={model?.commands} isselectrow={true} selectcount={selectCount}
@@ -119,8 +132,12 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             searchShow={{
                 fields: model?.fields?.filter(f => f.issearch ?? true),
                 onSearch: (w: SearchWhere) => {
-                    if (w != undefined)
-                        searchItem.whereList = [w]
+                    if (w != undefined) {
+                        if (isArray(w)) {
+                            searchItem.whereList = w
+                        } else
+                            searchItem.whereList = [w]
+                    }
                     searchItem.page = 1
                     searchDataThan(searchItem, (data) => {
                         setData(data)
@@ -138,14 +155,14 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                     setSelectCount(keys.length)
                     setValues(row)
                 }}
-                onSearchData={(item,callback) => {
-                    if (item.parent && item.childmodel){
+                onSearchData={(item, callback) => {
+                    if (item.parent && item.childmodel) {
                         searchDataThan(item, (data) => {
                             callback(data)
                         })
                         return
                     }
-                    item.whereList=searchItem.whereList
+                    item.whereList = searchItem.whereList
                     searchDataThan(item, (data) => {
                         setData(data)
                     })
