@@ -318,12 +318,13 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         }
     }
     function getTable() {
+        var columns = getColumns(props.attr)
         return (<Table
             bordered={true}
             rowKey="id"
-            columns={getColumns(props.attr)}
+            columns={columns}
             rowSelection={rowSelection()}
-            scroll={{ x: true }}
+            scroll={{ x: columns.length * 150 }}
             dataSource={data.rows}
             pagination={{ current: 1, pageSize: 10, total: data.total }}
             loading={loading}
