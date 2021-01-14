@@ -49,6 +49,16 @@ export type BasicLayoutContext = { [K in 'location']: BasicLayoutProps[K] } & {
 const transportMenus = (): MenuDataItem[] => {
   var menus: MenuDataItem[] = [
     {
+      path: "system",
+      icon: <DatabaseOutlined />,
+      name: "系统功能",
+      children: [
+        { name: '目录管理', path: '/waypage/SystemDirectory/tree' },
+        { name: '模块管理', path: '/waypage/SystemModel/table' },
+        { name: '用户管理', path: '/waypage/User/table' },
+      ]
+    },
+    {
       path: "base",
       icon: <DatabaseOutlined />,
       name: "业务功能",

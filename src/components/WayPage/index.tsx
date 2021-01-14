@@ -53,6 +53,8 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }
     function searchDataThan(item: SearchItem, callback: (data: TableData) => void) {
         setLoading(true)
+        if (item.foreign == undefined && item.childmodel == undefined)
+            setSelectCount(0)
         props.search(item).then(result => {
             setLoading(false)
             if (result != undefined && result.success) {
@@ -96,21 +98,13 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         })
     }
 
-    const resultMessage = (message: string, success: boolean) => {
-        if (!success) {
-            Modal.error({
-                visible: true,
-                title: '出错了',
-                icon: <CloseCircleOutlined />,
-                content: <div>{message}</div>
-            })
-        } else {
-            Modal.success({
-                visible: true,
-                content: <div>{message}</div>
-            })
-        }
-
+    function resultMessage(message: string) {
+        Modal.error({
+            visible: true,
+            title: '出错了',
+            icon: <CloseCircleOutlined />,
+            content: <div>{message}</div>
+        })
     }
     function renderToolbar() {
         return (<WayToolbar attrs={model?.commands} isselectrow={true} selectcount={selectCount}

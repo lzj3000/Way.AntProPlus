@@ -114,17 +114,16 @@ const NoticeIcon: React.FC<NoticeIconProps> & {
   }
 
   return (
-    <></>
-    // <HeaderDropdown
-    //   placement="bottomRight"
-    //   overlay={notificationBox}
-    //   overlayClassName={styles.popover}
-    //   trigger={['click']}
-    //   visible={visible}
-    //   onVisibleChange={setVisible}
-    // >
-    //   {trigger}
-    // </HeaderDropdown>
+    <HeaderDropdown
+      placement="bottomRight"
+      overlay={notificationBox}
+      overlayClassName={styles.popover}
+      trigger={['click']}
+      visible={visible}
+      onVisibleChange={setVisible}
+    >
+      {trigger}
+    </HeaderDropdown>
   );
 };
 

@@ -44,27 +44,29 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
             }
             if (item.foreign && item.foreign.isfkey) {
                 console.log(child)
-                var c = child.find((f => f.label == '等于' ))
-                child=[c]
+                if (child) {
+                    var c = child.find((f => f.label == '等于'))
+                    child = [c]
+                }
             }
             option.push({ label: item.title, value: item.field, children: child })
         })
     }
     function renderCascader() {
-        return (<Cascader style={{ width: '35%' }} options={option} allowClear={false} defaultValue={['*']} 
-        expandTrigger={'hover'}
-        onChange={(value) => {
-            console.log(value)
-            var name = value[0]
-            var field = props.fields?.find((item) => item.field == name)
-            setNameType({ name: name, symbol: value[1], type: field?.type })
-            setTextChange({ value: '', attr: field })
-            if (field?.type == "datetime") {
-                var data = { ...textOption }
-                data.picker = value[1]
-                setTextOption(data)
-            }
-        }} />)
+        return (<Cascader style={{ width: '35%' }} options={option} allowClear={false} defaultValue={['*']}
+            expandTrigger={'hover'}
+            onChange={(value) => {
+                console.log(value)
+                var name = value[0]
+                var field = props.fields?.find((item) => item.field == name)
+                setNameType({ name: name, symbol: value[1], type: field?.type })
+                setTextChange({ value: '', attr: field })
+                if (field?.type == "datetime") {
+                    var data = { ...textOption }
+                    data.picker = value[1]
+                    setTextOption(data)
+                }
+            }} />)
     }
     function renderTextBox() {
         return (<WayTextBox width={'50%'} options={textOption} search={true} name={nameType.name}

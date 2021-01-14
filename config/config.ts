@@ -63,6 +63,12 @@ export default defineConfig({
               component: './transport',
             },
             {
+              name: 'system',
+              icon: 'smile',
+              path: '/waypage/:path/:type',
+              component: './WayPages',
+            },
+            {
               name: 'result',
               icon: 'CheckCircleOutlined',
               path: '/result',

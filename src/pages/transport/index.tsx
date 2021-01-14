@@ -9,6 +9,7 @@ const WayPageIndex: React.FC = (props) => {
       (value) =>
       (<WayPage controller={props.match.params.path} title={value.title} namespace={'transport'}
         onExpandedRowTabPane={(childmodel, record) => {
+          if (props.match.params.path != 'TranTask') return undefined
           if (record[childmodel.propertyname] && record[childmodel.propertyname].length > 0) {
             var items = record[childmodel.propertyname]
             return (<Row gutter={[8, 8]} justify={"center"}>
