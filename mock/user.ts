@@ -87,6 +87,21 @@ export default {
       address: 'Sidney No. 1 Lake Park',
     },
   ],
+  'POST api/user/login': async (req: Request, res: Response) => {
+    const { password, userName, type } = req.body;
+    if (password === '123456' && userName === 'test') {
+      res.send({
+        success: true,
+        message: '',
+        result: {
+          token: "sdfksdfjsfdjlsdflsjdflsjvkdjnfsknfs"
+        }
+      })
+    }
+  },
+  'Get api/user/info': async (req: Request, res: Response) => {
+    
+  },
   'POST /api/login/account': async (req: Request, res: Response) => {
     const { password, userName, type } = req.body;
     await waitTime(2000);
@@ -114,7 +129,6 @@ export default {
       });
       return;
     }
-
     res.send({
       status: 'error',
       type,

@@ -3,8 +3,7 @@ import { Button, Card, Table, Tabs } from 'antd';
 import { ChildModelAttribute, ModelAttribute, WayFieldAttribute, SearchItem, TableData } from '../Attribute'
 import { ExpandableConfig, SorterResult, TablePaginationConfig } from 'antd/lib/table/interface';
 import { isArray } from 'lodash';
-import WayTextBox from '../WayTextBox'
-import { models } from '@/.umi/plugin-model/Provider';
+import WayTextBox from '../WayTextBox';
 import moment, { isMoment } from 'moment';
 
 
@@ -284,17 +283,12 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             if (div != undefined)
                 return div
         }
-        var pane = {
-            key: 'id',
-            attr: childmodel,
-            isselect: false,
-            isedit: false,
-            data: { rows: record[childmodel.propertyname], total: record[childmodel.propertyname].total },
-            onSearchData: (item: SearchItem) => {
+        return (<WayTable key={"id"} isselect={false} isedit={false} isclosecard={true}
+            attr={childmodel} data={{ rows: record[childmodel.propertyname], total: record[childmodel.propertyname].total }}
+            onSearchData={(item: SearchItem) => {
                 getchildTable(item, childmodel, record)
-            }
-        }
-        return (<WayTable {...pane}></WayTable>)
+            }}
+        ></WayTable>)
     }
     const expandedRowRender = (record: any) => {
         if (props?.attr?.childmodels != undefined && props.attr.childmodels.length > 0) {
@@ -317,7 +311,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             </Tabs>)
         }
     }
-    function getTable() {
+    function renderTable() {
         var columns = getColumns(props.attr)
         return (<Table
             bordered={true}
@@ -376,9 +370,12 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             }}
         />)
     }
-    if (props.isclosecard)
-        return (getTable())
-    return (<Card>{getTable()}</Card>)
+    function render() {
+        if (props.isclosecard)
+            return (renderTable())
+        return (<Card>{renderTable()}</Card>)
+    }
+    return (render())
 }
 
 export default WayTable;

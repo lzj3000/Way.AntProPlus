@@ -3,8 +3,9 @@ import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { Link, SelectLang, useIntl, ConnectProps, connect, FormattedMessage } from 'umi';
 import React from 'react';
 import { ConnectState } from '@/models/connect';
-import logo from '../assets/logo.svg';
+import logo from '../assets/catimages/10.jpg';
 import styles from './UserLayout.less';
+import { Avatar } from 'antd';
 
 export interface UserLayoutProps extends Partial<ConnectProps> {
   breadcrumbNameMap: {
@@ -48,15 +49,12 @@ const UserLayout: React.FC<UserLayoutProps> = (props) => {
           <div className={styles.top}>
             <div className={styles.header}>
               <Link to="/">
-                {/* <img alt="logo" className={styles.logo} src={logo} /> */}
+              <Avatar size="large" src={logo}></Avatar>
                 <span className={styles.title}>运输管理系统</span>
               </Link>
             </div>
             <div className={styles.desc}>
-              {/* <FormattedMessage
-                id="pages.layouts.userLayout.title"
-                defaultMessage="Ant Design 是西湖区最具影响力的 Web 设计规范"
-              /> */}
+              为改善效率运行
             </div>
           </div>
           {children}
