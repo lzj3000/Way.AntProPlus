@@ -51,17 +51,27 @@ const Model: ModelType = {
   effects: {
     *login({ payload }, { call, put }) {
       console.log(payload)
-      //const response = yield call(fakeAccountLogin, payload);
-      const response={
-        status: 'ok',
-        type,
-        currentAuthority: 'user',
+      var response = yield call(fakeAccountLogin, payload);
+      console.log(response)
+      if (!response.success) {
+        if (!response.message)
+          message.error("用户名或密码错误，请修改后重试!")
+        else
+          message.error(response.message)
+        return
+      } else {
+        var token = response.result.token
+        localStorage.setItem('token', token);
+        response = {
+          status: 'ok',
+          type: 'account',
+          currentAuthority: response.result.isemployee ? 'user' : 'admin'
+        }
+        yield put({
+          type: 'changeLoginStatus',
+          payload: response,
+        });
       }
-      yield put({
-        type: 'changeLoginStatus',
-        payload: response,
-      });
-      // Login successfully
       if (response.status === 'ok') {
         message.success('登录成功！');
         const urlParams = new URL(window.location.href);
@@ -79,7 +89,8 @@ const Model: ModelType = {
             return;
           }
         }
-        history.replace(redirect || '/');
+        window.location.href = '/'
+        //history.replace(redirect || '/');
       }
     },
 

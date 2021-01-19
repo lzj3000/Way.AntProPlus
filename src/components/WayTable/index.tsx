@@ -36,6 +36,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     const [loading, setLoading] = useState(props.loading ?? false)
     const [data, setData] = useState(props.data ?? { rows: [], total: 0 })
     const [rowedit, setRowedit] = useState(props.rowedit ?? false)
+    const [current, setCurrent] = useState(1)
 
     useEffect(() => {
         setData(props.data ?? { rows: [], total: 0 })
@@ -121,6 +122,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             return ss
         }
         setLoading(true)
+        setCurrent(pagination.current??1)
         try {
             var item: SearchItem = {
                 page: pagination.current ?? 1,
@@ -320,7 +322,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             rowSelection={rowSelection()}
             scroll={{ x: columns.length * 150 }}
             dataSource={data.rows}
-            pagination={{ current: 1, pageSize: 10, total: data.total }}
+            pagination={{ current: current, pageSize: 10, total: data.total, hideOnSinglePage: true }}
             loading={loading}
             expandable={expandable()}
             onChange={handleTableChange}

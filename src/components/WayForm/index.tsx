@@ -165,7 +165,7 @@ const WayFrom: React.FC<WayFromProps> = (props) => {
         if (field.required)
             rules.push({ required: field.required })
         if (field.length ?? 0 > 0)
-            rules.push({ len: field.length })
+            rules.push({ max: field.length })
         if (props.onFieldRules != undefined)
             rules = props.onFieldRules(field, rules)
         return rules

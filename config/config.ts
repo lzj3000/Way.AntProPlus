@@ -57,6 +57,10 @@ export default defineConfig({
           authority: ['admin', 'user'],
           routes: [
             {
+              path: '/',
+              redirect: '/transport/TranTask',
+            },
+            {
               name: 'transport',
               icon: 'smile',
               path: '/transport/:path',
@@ -67,6 +71,12 @@ export default defineConfig({
               icon: 'smile',
               path: '/waypage/:path/:type',
               component: './WayPages',
+            },
+            {
+              name: 'settings',
+              icon: 'smile',
+              path: '/account/settings',
+              component: './account/settings',
             },
             {
               name: 'result',

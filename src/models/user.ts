@@ -1,6 +1,7 @@
 import { Effect, Reducer } from 'umi';
 
 import { queryCurrent, query as queryUsers } from '@/services/user';
+import { message } from 'antd';
 
 export interface CurrentUser {
   avatar?: string;
@@ -50,9 +51,18 @@ const UserModel: UserModelType = {
     },
     *fetchCurrent(_, { call, put }) {
       const response = yield call(queryCurrent);
+      if (response.ok != undefined && response.ok == false) {
+        window.location.href = '/user/login'
+      }
+      var user = {
+        name: response.result.name,
+        avatar: "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
+        email: response.result.email,
+        phone: response.result.phone
+      }
       yield put({
         type: 'saveCurrentUser',
-        payload: response,
+        payload: user,
       });
     },
   },

@@ -23,7 +23,7 @@ const noMatch = (
   <Result
     status={403}
     title="403"
-    subTitle="Sorry, you are not authorized to access this page."
+    subTitle="对不起, 您没有权限访问这个功能."
     extra={
       <Button type="primary">
         <Link to="/user/login">Go Login</Link>
@@ -52,19 +52,23 @@ const transportMenus = (): MenuDataItem[] => {
       path: "system",
       icon: <DatabaseOutlined />,
       name: "系统功能",
+      authority: ['admin'],
       children: [
-        { name: '目录管理', path: '/waypage/SystemDirectory/tree' },
-        { name: '模块管理', path: '/waypage/SystemModel/table' },
-        { name: '用户管理', path: '/waypage/User/table' },
+        // { name: '目录管理', path: '/transport/SystemDirectory' },
+        // { name: '模块管理', path: '/transport/SystemModel' },
+        // { name: '角色管理', path: '/transport/SystemRole' },
+        { name: '系统用户管理', path: '/transport/SystemUser' },
+        { name: '仓库管理', path: '/transport/Store' },
+        { name: '承运商管理', path: '/transport/TranSupplier' },
       ]
     },
     {
       path: "base",
       icon: <DatabaseOutlined />,
       name: "业务功能",
+      authority: ['admin','user'],
       children: [
-        { name: '仓库管理', path: '/transport/Store' },
-        { name: '承运商管理', path: '/transport/TranSupplier' },
+        { name: '承运商员工管理', path: '/transport/SupplierEmployee' },
         { name: '车辆管理', path: '/transport/Vehicle' },
         { name: '司机管理', path: '/transport/Deiver' },
         { name: '任务管理', path: '/transport/TranTask' },
@@ -150,6 +154,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
     [location.pathname],
   );
   const { formatMessage } = useIntl();
+  
   return (
     <>
       <ProLayout

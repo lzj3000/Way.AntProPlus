@@ -30,7 +30,7 @@ const GlobalHeaderRight: React.SFC<GlobalHeaderRightProps> = (props) => {
       <HeaderSearch
         className={`${styles.action} ${styles.search}`}
         placeholder="站内搜索"
-        defaultValue="umi ui"
+        defaultValue=""
         options={[
           // {
           //   label: <a href="https://umijs.org/zh/guide/umi-ui.html">umi ui</a>,
@@ -58,14 +58,14 @@ const GlobalHeaderRight: React.SFC<GlobalHeaderRightProps> = (props) => {
             color: 'inherit',
           }}
           target="_blank"
-          href="https://pro.ant.design/docs/getting-started"
+          href=""
           rel="noopener noreferrer"
           className={styles.action}
         >
           <QuestionCircleOutlined />
         </a>
       </Tooltip>
-      <NoticeIconView />
+      {/* <NoticeIconView /> */}
       <Avatar menu />
       {REACT_APP_ENV && (
         <span>

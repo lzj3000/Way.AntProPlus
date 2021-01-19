@@ -5,6 +5,7 @@ import { fakeAccountLogin } from '@/services/login';
 import { setAuthority } from '@/utils/authority';
 import { getPageQuery } from '@/utils/utils';
 import { message } from 'antd';
+import { loginOut } from '@/services/user';
 
 export interface StateType {
   status?: 'ok' | 'error';
@@ -59,9 +60,10 @@ const Model: LoginModelType = {
         history.replace(redirect || '/');
       }
     },
-
-    logout() {
+    *logout() {
       const { redirect } = getPageQuery();
+      localStorage.setItem('token', '');
+      loginOut()
       // Note: There may be security issues, please note
       if (window.location.pathname !== '/user/login' && !redirect) {
         history.replace({

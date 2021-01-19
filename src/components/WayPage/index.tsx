@@ -25,10 +25,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const [model, setModel] = useState<ModelAttribute | undefined>(undefined)
     const [data, setData] = useState({ rows: [], total: 0 })
     var form: FormPlus = null
-
-    useEffect(() => {
-        init()
-    }, [])
+    
     useEffect(() => {
         setModel(undefined)
         setValues(null)
@@ -39,7 +36,9 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }, [props.controller])
 
     if (model == undefined) { return (<></>) }
+    
     function init() {
+        console.log('waypage.init')
         props.init().then((result) => {
             if (result.success) {
                 setModel(result.data.model)
@@ -53,9 +52,11 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }
     function searchDataThan(item: SearchItem, callback: (data: TableData) => void) {
         setLoading(true)
+        console.log(item)
         if (item.foreign == undefined && item.childmodel == undefined)
             setSelectCount(0)
         props.search(item).then(result => {
+            console.log(result)
             setLoading(false)
             if (result != undefined && result.success) {
                 if (result.data.rows == null)
@@ -186,14 +187,9 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }
     return (render())
 }
-function mapStateToProps(state: any, ownProps: WayPageProps) {
-    let innerState = state.waydefault
-    if (ownProps.namespace != undefined)
-        innerState = state[ownProps.namespace]
-    var mstp = { result: innerState.result, title: ownProps.title }
-    return mstp
-}
+
 function mapDispatchToProps(dispatch: any, ownProps: WayPageProps) {
+    console.log('waypage.mapDispatchToProps')
     var typens = 'waydefault'
     if (ownProps.namespace != undefined)
         typens = ownProps.namespace
@@ -228,4 +224,4 @@ function mapDispatchToProps(dispatch: any, ownProps: WayPageProps) {
         },
     }
 }
-export default connect(mapStateToProps, mapDispatchToProps)(WayPage);
+export default connect(()=>{}, mapDispatchToProps)(WayPage);

@@ -68,9 +68,13 @@ const validatorPhone = (rule: any, value: string, callback: (message?: string) =
 
 interface BaseViewProps {
   currentUser?: CurrentUser;
+  setPassword: (oldpassword: string, newpassword: string, callback: (result: any) => void) => void;
 }
 
 class BaseView extends Component<BaseViewProps> {
+  constructor(props: BaseViewProps) {
+    super(props);
+  }
   view: HTMLDivElement | undefined = undefined;
 
   getAvatarURL() {
@@ -89,13 +93,19 @@ class BaseView extends Component<BaseViewProps> {
     this.view = ref;
   };
 
-  handleFinish = () => {
-    message.success(formatMessage({ id: 'accountandsettings.basic.update.success' }));
+  handleFinish = (values: any) => {
+    const { setPassword } = this.props;
+    setPassword(values.oldpassword, values.newpassword, (result: any) => {
+      if (result.success) {
+        message.success('更新密码完成.');
+      } else {
+        message.error(result.message)
+      }
+    })
   };
 
   render() {
     const { currentUser } = this.props;
-
     return (
       <div className={styles.baseView} ref={this.getViewDom}>
         <div className={styles.left}>
@@ -108,102 +118,48 @@ class BaseView extends Component<BaseViewProps> {
             <Form.Item
               name="email"
               label={formatMessage({ id: 'accountandsettings.basic.email' })}
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage({ id: 'accountandsettings.basic.email-message' }, {}),
-                },
-              ]}
             >
-              <Input />
+              <Input disabled />
             </Form.Item>
             <Form.Item
               name="name"
-              label={formatMessage({ id: 'accountandsettings.basic.nickname' })}
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage({ id: 'accountandsettings.basic.nickname-message' }, {}),
-                },
-              ]}
+              label={'用户名称'}
             >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="profile"
-              label={formatMessage({ id: 'accountandsettings.basic.profile' })}
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage({ id: 'accountandsettings.basic.profile-message' }, {}),
-                },
-              ]}
-            >
-              <Input.TextArea
-                placeholder={formatMessage({ id: 'accountandsettings.basic.profile-placeholder' })}
-                rows={4}
-              />
-            </Form.Item>
-            <Form.Item
-              name="country"
-              label={formatMessage({ id: 'accountandsettings.basic.country' })}
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage({ id: 'accountandsettings.basic.country-message' }, {}),
-                },
-              ]}
-            >
-              <Select style={{ maxWidth: 220 }}>
-                <Option value="China">中国</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item
-              name="geographic"
-              label={formatMessage({ id: 'accountandsettings.basic.geographic' })}
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage({ id: 'accountandsettings.basic.geographic-message' }, {}),
-                },
-                {
-                  validator: validatorGeographic,
-                },
-              ]}
-            >
-              <GeographicView />
-            </Form.Item>
-            <Form.Item
-              name="address"
-              label={formatMessage({ id: 'accountandsettings.basic.address' })}
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage({ id: 'accountandsettings.basic.address-message' }, {}),
-                },
-              ]}
-            >
-              <Input />
+              <Input disabled />
             </Form.Item>
             <Form.Item
               name="phone"
-              label={formatMessage({ id: 'accountandsettings.basic.phone' })}
+              label={"手机号"}
+            >
+              <Input disabled />
+            </Form.Item>
+            <Form.Item
+              name="oldpassword"
+              label={"旧密码"}
               rules={[
                 {
                   required: true,
-                  message: formatMessage({ id: 'accountandsettings.basic.phone-message' }, {}),
+                  message: "旧密码不能为空！",
                 },
-                { validator: validatorPhone },
               ]}
             >
-              <PhoneView />
+              <Input.Password />
+            </Form.Item>
+            <Form.Item
+              name="newpassword"
+              label={"新密码"}
+              rules={[
+                {
+                  required: true,
+                  message: "新密码不能为空！",
+                },
+              ]}
+            >
+              <Input.Password />
             </Form.Item>
             <Form.Item>
               <Button htmlType="submit" type="primary">
-                <FormattedMessage
-                  id="accountandsettings.basic.update"
-                  defaultMessage="Update Information"
-                />
+                {"更新密码"}
               </Button>
             </Form.Item>
           </Form>

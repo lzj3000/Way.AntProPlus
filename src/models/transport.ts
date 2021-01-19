@@ -54,8 +54,7 @@ const itemToField = (items: any[]) => {
 }
 const WayModel: DefaultModelType = {
     namespace: 'transport',
-    state: {
-    },
+    state:{},
     effects: {
         *init(args, { call, put }) {
             const result = yield call(async () => await request(`/api/${args.payload}/view`, {
@@ -111,17 +110,6 @@ const WayModel: DefaultModelType = {
                 data: args.payload.item
             }))
             return result
-        }
-    },
-    reducers: {
-        inited(state, action) {
-            return state
-        },
-        searched(state, action) {
-            return state
-        },
-        executed(state, action) {
-            return state
         }
     }
 }

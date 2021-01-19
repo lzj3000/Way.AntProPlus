@@ -1,6 +1,6 @@
 import { Effect, Reducer } from 'umi';
 import { CurrentUser, GeographicItemType } from './data.d';
-import { queryCity, queryCurrent, queryProvince, query as queryUsers } from './service';
+import { queryCity, queryCurrent, queryProvince, query as queryUsers, setpassword } from './service';
 
 export interface ModalState {
   currentUser?: Partial<CurrentUser>;
@@ -46,11 +46,27 @@ const Model: ModelType = {
       });
     },
     *fetchCurrent(_, { call, put }) {
-      const response = yield call(queryCurrent);
-      yield put({
-        type: 'saveCurrentUser',
-        payload: response,
-      });
+      try {
+        const response = yield call(queryCurrent);
+        console.log(response)
+        if (response.success) {
+          var user = {
+            name: response.result.name,
+            avatar: "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
+            email: response.result.email,
+            phone: response.result.phone
+          }
+          yield put({
+            type: 'saveCurrentUser',
+            payload: user,
+          });
+        } else {
+        
+        }
+      }
+      catch {
+        //window.location.href = '/user/login'
+      }
     },
     *fetchProvince(_, { call, put }) {
       yield put({
@@ -70,10 +86,17 @@ const Model: ModelType = {
         payload: response,
       });
     },
+    *fetchSetPassword({ payload }, { call, put }) {
+      const response = yield call(setpassword, payload);
+      return response
+    },
   },
 
   reducers: {
     saveCurrentUser(state, action) {
+      console.log(state)
+      console.log('saveCurrentUser')
+      console.log(action.payload)
       return {
         ...state,
         currentUser: action.payload || {},

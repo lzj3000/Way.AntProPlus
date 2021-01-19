@@ -35,24 +35,24 @@ class Settings extends Component<SettingsProps, SettingsState> {
       base: (
         <FormattedMessage id="accountandsettings.menuMap.basic" defaultMessage="Basic Settings" />
       ),
-      security: (
-        <FormattedMessage
-          id="accountandsettings.menuMap.security"
-          defaultMessage="Security Settings"
-        />
-      ),
-      binding: (
-        <FormattedMessage
-          id="accountandsettings.menuMap.binding"
-          defaultMessage="Account Binding"
-        />
-      ),
-      notification: (
-        <FormattedMessage
-          id="accountandsettings.menuMap.notification"
-          defaultMessage="New Message Notification"
-        />
-      ),
+      // security: (
+      //   <FormattedMessage
+      //     id="accountandsettings.menuMap.security"
+      //     defaultMessage="Security Settings"
+      //   />
+      // ),
+      // binding: (
+      //   <FormattedMessage
+      //     id="accountandsettings.menuMap.binding"
+      //     defaultMessage="Account Binding"
+      //   />
+      // ),
+      // notification: (
+      //   <FormattedMessage
+      //     id="accountandsettings.menuMap.notification"
+      //     defaultMessage="New Message Notification"
+      //   />
+      // ),
     };
     this.state = {
       mode: 'inline',
@@ -114,15 +114,25 @@ class Settings extends Component<SettingsProps, SettingsState> {
 
   renderChildren = () => {
     const { selectKey } = this.state;
+    const { dispatch } = this.props;
+
     switch (selectKey) {
       case 'base':
-        return <BaseView />;
-      case 'security':
-        return <SecurityView />;
-      case 'binding':
-        return <BindingView />;
-      case 'notification':
-        return <NotificationView />;
+        return <BaseView setPassword={(oldpassword: string, newpassword: string, callback: (result: any) => void) => {
+          dispatch({
+            type: 'accountAndsettings/fetchSetPassword',
+            payload:{oldpassword: oldpassword, newpassword: newpassword }
+          }).then((result: any) => {
+            console.log(result)
+            callback(result)
+          })
+        }} />;
+      // case 'security':
+      //   return <SecurityView />;
+      // case 'binding':
+      //   return <BindingView />;
+      // case 'notification':
+      //   return <NotificationView />;
       default:
         break;
     }
@@ -132,7 +142,7 @@ class Settings extends Component<SettingsProps, SettingsState> {
 
   render() {
     const { currentUser } = this.props;
-    if (!currentUser.userid) {
+    if (!currentUser.name) {
       return '';
     }
     const { mode, selectKey } = this.state;

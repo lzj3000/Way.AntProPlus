@@ -1,9 +1,16 @@
-import request from 'umi-request';
+import request from '@/utils/request';
 
 export async function queryCurrent() {
-  return request('/api/currentUser');
+  return request('/api/user/info');
 }
-
+export async function setpassword(payload: any) {
+  return request('/api/user/changepassword',
+    {
+      method: 'POST',
+      data: { oldpassword: payload.oldpassword, newpassword: payload.newpassword }
+    }
+  );
+}
 export async function queryProvince() {
   return request('/api/geographic/province');
 }

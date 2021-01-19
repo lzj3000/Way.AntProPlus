@@ -49,6 +49,9 @@ const errorHandler = (error: { response: Response }): Response => {
  * 配置request请求时的默认参数
  */
 const request = extend({
+  headers:{
+    'authorization':`Bearer ${localStorage.getItem('token')}`
+  },
   errorHandler, // 默认错误处理
   credentials: 'include', // 默认请求是否带上cookie
 });
