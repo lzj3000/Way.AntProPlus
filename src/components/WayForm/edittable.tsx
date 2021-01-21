@@ -17,6 +17,7 @@ interface WayEditTableProps {
     commandShow?: boolean,
     ismodal?: boolean,
     modelshow?: boolean,
+    isselect?: boolean,
     selectType?: string,
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
     onAddRowing?: (row: any) => boolean,
@@ -174,7 +175,7 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     }
     function renderTable() {
         return (
-            <WayTable attr={props.model} data={data} isedit={!props.closeedit} rowedit={rowedit} selectType={props.selectType ?? "checkbox"} isselect={true}
+            <WayTable attr={props.model} data={data} isedit={!props.closeedit} rowedit={rowedit} selectType={props.selectType ?? "checkbox"} isselect={props.isselect ?? true}
                 isclosecard={true}
                 onSelectRows={(row, keys, selected) => {
                     setSelectKeys(keys)

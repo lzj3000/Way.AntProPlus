@@ -1,5 +1,5 @@
 import WayForm from '@/pages/WayPages/components/wayform';
-import { Card, Steps } from 'antd';
+import { Card, Divider, Steps } from 'antd';
 import { StepProps } from 'antd/lib/steps';
 import React, { useEffect, useState } from 'react';
 import { ModelAttribute, WayFieldAttribute } from '../Attribute';
@@ -45,15 +45,16 @@ const WayStepFrom: React.FC<WayStepFromProps> = (props) => {
                 return (<Step {...item} />)
             })}
         </Steps>
+        <Divider />
             {getCurrentStepAndComponent(currentStep)}
         </>)
     }
     function render() {
         if (props.isModal) {
-            return (<DragModal title={props.title} width={1000} visible={isshow} onCancel={() => setModalShow(false)} onOk={() => {
+            return (<DragModal title={props.title} width={900} visible={isshow} onCancel={() => setModalShow(false)} onOk={() => {
 
             }}>
-                <Card title={props.title} bordered={false}>{renderSteps()}</Card>
+                {renderSteps()}
             </DragModal>)
         }
         if (props.isCard)

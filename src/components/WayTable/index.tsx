@@ -97,7 +97,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         }
         attr?.fields?.filter((field) => field.visible).forEach((item) => {
             cols.push({
-                dataIndex: item.field, title: item.title, sorter: true, render: (text: any, record: any) => {
+                dataIndex: item.field, title: item.title, sorter: item.sorter ?? true, render: (text: any, record: any) => {
                     if (record == undefined) return
                     if (rowedit && record.editable) {
                         return columnToEdit(item, record)
@@ -122,7 +122,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             return ss
         }
         setLoading(true)
-        setCurrent(pagination.current??1)
+        setCurrent(pagination.current ?? 1)
         try {
             var item: SearchItem = {
                 page: pagination.current ?? 1,

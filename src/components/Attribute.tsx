@@ -15,6 +15,7 @@ export interface WayFieldAttribute {
     tag?: any;
     comvtp?: ComboxAttribute;
     foreign?: ForeignAttribute;
+    sorter?: boolean
 }
 
 export interface ComboxAttribute {

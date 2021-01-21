@@ -7,8 +7,10 @@ import { ChildModelAttribute, ModelAttribute } from '@/components/Attribute'
 import { Divider, Form } from 'antd'
 import WayTable, { TableData } from '@/components/WayTable';
 import WayEditTable from '@/components/WayForm/edittable';
+import ImportForm from '@/components/WayTable/importform';
 
 export default function Page() {
+    const [isshow, setIsShow] = useState(false)
     const [vs, setStringValue] = useState("HelloWold")
     const [vn, setNumberValue] = useState(20)
     const [dn, setDateValue] = useState("1989-08-18")
@@ -25,10 +27,11 @@ export default function Page() {
         { command: "remove", name: "删除", isalert: true },
         { command: "test1", name: "测试1", isselectrow: true },
         { command: "save", name: "保存" },
-        { command: "get", name: "获取" },
+        { command: "import", name: "导入" },
         { command: "test4", name: "测试4", issplit: true, splitname: "test2", isalert: true },
         { command: "test5", name: "测试5", issplit: true, splitname: "save", isselectrow: true },
         { command: "test6", name: "测试6", issplit: true, splitname: "save" },
+
     ]
     var r = [
         { id: 1, name: "X1", age: 24, "born": "2020-12-03", "ismirc": true, "city": 3 },
@@ -131,6 +134,9 @@ export default function Page() {
                 if (name == 'remove') {
                     setRows(null)
                 }
+                if(name=='import'){
+                    setIsShow(true)
+                }
                 onCommand(name)
             }} attrs={buttons}></WayToolbar>
             <WayToolbar commandShow={true} iscircle={true} attrs={buttons}></WayToolbar>
@@ -152,6 +158,7 @@ export default function Page() {
             <WayTextBox value={dttext}  width={'50%'} onChange={setDtTest} attr={ttt} disabled={bn} ></WayTextBox>
             <div>{String(dttext)}</div>
             <WayTextBox disabled={!bn} width={'50%'} value={dn} onChange={setDateValue} textType={TextType.DatePicker} ></WayTextBox>
+            <ImportForm isShow={isshow}></ImportForm>
         </div>
     );
 }

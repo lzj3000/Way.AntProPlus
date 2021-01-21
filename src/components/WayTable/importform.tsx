@@ -1,5 +1,5 @@
-import { UploadOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Checkbox, Col, message, Progress, Row, Upload } from 'antd';
+import { InboxOutlined, UploadOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Checkbox, Col, message, Progress, Row, Space, Upload } from 'antd';
 import { StepProps } from 'antd/lib/steps';
 import React, { useEffect, useState } from 'react';
 import WayStepFrom from '../WayForm/stepform';
@@ -8,11 +8,15 @@ import WayTable from '.';
 import { ModelAttribute, WayFieldAttribute } from '../Attribute';
 import WayEditTable from '../WayForm/edittable';
 import * as XLSX from 'xlsx';
+import Dragger from 'antd/lib/upload/Dragger';
 
 const { Title } = Typography;
 
 interface ImportFormProps {
+    title?: string
     isShow: boolean
+    attr: ModelAttribute
+    onAdd?: any
 }
 
 const ImportForm: React.FC<ImportFormProps> = (props) => {
@@ -21,41 +25,52 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
     const [isonetable, setIsOneTable] = useState(false)
     const [rowcount, setRowCount] = useState(0)
     const [sourceTable, setSourceTable] = useState({ model: undefined, data: { rows: [], total: 0 } })
-    const [targetFields, setTargetFields] = useState<WayFieldAttribute[]>([])
+    const [targetFields, setTargetFields] = useState<WayFieldAttribute[]>(filterfields(props.attr))
     const [importCount, setImportCount] = useState(0)
-    var upfileResult: any = null
-    var sourceTotargetMapTable: any = null
+    const [importState, setImportState] = useState({
+        message: '',
+        description: '',
+        type: 'success'
+    })
+    const [upfileResult, setUpfileResult] = useState(null)
+
+    const [sourceTotargetMapTable,setSourceTotargetMapTable]=useState([])
+
+    function filterfields(attr) {
+        return attr.fields?.filter((field) => { return field.visible && !field.disabled })
+    }
     useEffect(() => {
         setModalShow(props.isShow)
     }, [props.isShow])
+    useEffect(() => {
+        setTargetFields(filterfields(props.attr))
+    }, [props.attr])
     function stepItem() {
-        var step1: StepProps = { title: "上传导入文件", description: "支持Excel文件导入" }
-        var step2: StepProps = { title: "设置导入映射", description: "从Excel文件中获取的数据，设置Excel列对应到要导入的数据列，可以设置导入时的相关规则" }
-        var step3: StepProps = { title: "导入数据过程", description: "导入数据中，错误或中断请获取中止文件处理后，重新上传导入" }
-        var step4: StepProps = { title: "完成", description: "" }
-        var items: StepProps[] = [step1, step2, step3, step4]
+        var step1: StepProps = { title: "上传导入文件" }
+        var step2: StepProps = { title: "设置导入映射" }
+        var step3: StepProps = { title: "导入数据" }
+        var items: StepProps[] = [step1, step2, step3]
         return items
     }
     function getattr(table: any[]): ModelAttribute {
         var attr: ModelAttribute = { fields: [] }
         if (table.length > 0) {
             for (var n in table[0]) {
-                attr.fields?.push({ field: n, title: n, type: "string" })
+                attr.fields?.push({ field: n, title: n, type: "string", visible: true, sorter: false })
             }
         }
         return attr
     }
-    function setshowtable(isonetable) {
-        const { rowcount, table, onetable } = upfileResult
+    function setshowtable(result) {
+        const { rowcount, data } = result
         if (rowcount > 0) {
-            if (isonetable) {
-                setRowCount(rowcount - 1)
-                setSourceTable({ model: getattr(onetable), data: { rows: onetable, total: onetable.length } })
+            setRowCount(rowcount - 1)
+            var m = getattr(data)
+            var rows = []
+            for (var i = 0; i < 6; i++) {
+                rows.push(data[i])
             }
-            else {
-                setRowCount(rowcount)
-                setSourceTable({ model: getattr(table), data: { rows: table, total: table.length } })
-            }
+            setSourceTable({ model: m, data: { rows: rows, total: 5 } })
         }
     }
     function getUpfile() {
@@ -63,13 +78,13 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
             name: 'file',
             accept: '.xlsx, .xls',
             onChange(info: any) {
-                // 获取上传的文件对象
-                const { files } = info.target;
+                console.log(info)
+
                 // 通过FileReader对象读取文件
                 const fileReader = new FileReader();
                 fileReader.onload = event => {
                     try {
-                        const { result } = event.target;
+                        const { result } = event.target
                         // 以二进制流方式读取得到整份excel表格对象
                         const workbook = XLSX.read(result, { type: 'binary' });
                         // 存储获取到的数据
@@ -84,15 +99,9 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
                             }
                         }
                         // 最终获取到并且格式化后的 json 数据
-                        let rows = data.length > 11 ? 11 : data.length
-                        let table: any[] = []
-                        let onetable: any[] = []
-                        for (var i = 0; i < rows - 1; i++) {
-                            table.push(data[i])
-                            onetable.push(data[i + 1])
-                        }
-                        upfileResult = { data: data, rowcount: data.length, table, onetable }
-                        setshowtable(isonetable)
+                        var res = { data: data, rowcount: data.length }
+                        setUpfileResult(res)
+                        setshowtable(res)
                     } catch (e) {
                         // 这里可以抛出文件类型错误不正确的相关提示
                         message.error('发生错误！');
@@ -100,58 +109,62 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
                     }
                 };
                 // 以二进制方式打开文件
-                fileReader.readAsBinaryString(files[0]);
+                fileReader.readAsBinaryString(info.file.originFileObj);
             },
         };
-        return (<Card ><Row gutter={[16, 16]}><Col span={24}>
-            <Upload style={{ width: "100%" }} {...upfile}>
-                <Button icon={<UploadOutlined />}>点击上传导入文件</Button>
-            </Upload>
-        </Col></Row>
-            <Row gutter={[16, 16]}>
-                <Col span={12}><Checkbox style={{ width: "100%" }} checked={isonetable} onChange={(e) => {
-                    setIsOneTable(e.target.checked)
-                    setshowtable(e.target.checked)
-                }}>第一行是否为表头列</Checkbox></Col>
-                <Col span={12}><Title style={{ width: "100%" }} level={5}>上传文件中的数据为{rowcount}行</Title></Col></Row>
-            <Row gutter={[16, 16]}><Col span={24}><WayTable attr={sourceTable.model} data={sourceTable.data}></WayTable></Col></Row>
-            <Row gutter={[16, 16]}><Col span={24}><Button type="primary" disabled={rowcount < 1} onClick={() => { setCurrentStep(currentStep + 1) }}>下一步</Button></Col></Row>
+        return (<Card >
+            <Row gutter={[8, 8]}><Col span={24}>
+                <Alert showIcon message={`上传文件中的数据为${rowcount}行`} type={"info"} />
+            </Col>
+            </Row>
+            <Row gutter={[8, 8]}>
+                <Col span={24}>
+                    <Dragger  {...upfile}>
+                        <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+                        <p className="ant-upload-text">点击或拖拽文件上传</p>
+                    </Dragger>
+                </Col></Row>
+            <Row gutter={[8, 8]}><Col span={24}><WayTable isclosecard={true} attr={sourceTable.model} data={sourceTable.data}></WayTable></Col></Row>
+            <Row gutter={[8, 8]}><Col span={24} push={11}><Button type="primary" disabled={rowcount < 1} onClick={() => { setCurrentStep(currentStep + 1) }}>下一步</Button></Col></Row>
         </Card>
         )
     }
+    var sourceItems = new Map<number, string>()
+    var targetItems = new Map<number, string>()
+    //todo:绑定异常
     function mapFileToData() {
-        var sourceItems = new Map<number, string>()
         sourceTable.model?.fields?.forEach((field, index) => {
             sourceItems.set(index, field.title)
         })
-        var targetItems = new Map<number, string>()
         var data: any = []
         targetFields.forEach((field, index) => {
             targetItems.set(index, field.title)
-            var sourcefield = sourceTable.model?.fields?.Find((sf) => {
+            var sourcefield = sourceTable.model?.fields?.find((sf) => {
                 return sf.field == field.field || sf.field == field.title
             })
             if (sourcefield == undefined || sourcefield == null) {
                 sourcefield = sourceTable.model?.fields[index]
             }
             var fm = (field.foreign && field.foreign.isfkey) ? "Name" : ""
-            data.push({ source: sourcefield.field, target: field.title, defaultValue: "", foreignMap: fm, editable: true })
+            data.push({ id: index, source: index, target: index, defaultValue: "", foreignMap: fm })
         })
         var items = [
-            { field: "source", title: "来源列名", type: "string", comvtp: { isvtp: true, items: sourceItems } },
-            { field: "target", title: "目标列名", type: "string", comvtp: { isvtp: true, items: targetItems } },
-            { field: "defaultValue", title: "默认值", type: "string" },
-            { field: "foreignMap", title: "外关联映射", type: "string" }
+            { field: "source", title: "来源列名", type: "string", comvtp: { isvtp: true, items: sourceItems }, visible: true, sorter: false },
+            { field: "target", title: "目标列名", type: "string", comvtp: { isvtp: true, items: targetItems }, visible: true, sorter: false },
+            { field: "defaultValue", title: "默认值", type: "string", visible: true, sorter: false },
+            { field: "foreignMap", title: "外关联映射", type: "string", visible: true, sorter: false }
         ]
         var prop = {
+            isselect: false,
             closesearch: true,
             closetoolbar: true,
             model: { fields: items, isadd: false, isedit: true, isremove: false },
-            data: { rows: data, total: data.length },
+            data: { rows: sourceTotargetMapTable, total: sourceTotargetMapTable.length },
             onDataChange: (data: any) => {
-                sourceTotargetMapTable = data
+                setSourceTotargetMapTable(data)
             }
         }
+        setSourceTotargetMapTable(data)
         return (<>
             <Row gutter={[16, 16]}><Col span={24}><WayEditTable {...prop}></WayEditTable></Col></Row>
             <Row gutter={[16, 16]}>
@@ -160,40 +173,84 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
             </Row>
         </>)
     }
+    var stopImport: boolean = false
+    function startImportData() {
+        console.log(upfileResult)
+        const { data } = upfileResult
+        for (var i = importCount; i < data.length; i++) {
+            if (!stopImport) {
+                var row = {}
+                console.log(sourceTotargetMapTable)
+                for (var stmap in sourceTotargetMapTable) {
+                    var sn = sourceItems.get(stmap.source)
+                    var titem = targetFields.find(f => f.title == targetItems.get(stmap.target))
+                    var value = stmap.defaultValue == "" ? data[startImportIndex][sn] : stmap.defaultValue
+                    if (titem?.comvtp && titem.comvtp.isvtp) {
+                        for (let item of titem.comvtp.items.entries()) {
+                            if (value == item[1]) {
+                                value = item[0]
+                                break
+                            }
+                        }
+                    }
+                    row[titem.field] = value
+                    console.log(row)
+                    if (props.onAdd) {
+                        setImportState({
+                            message: "导入进行中",
+                            description: JSON.stringify(row),
+                            type: 'info'
+                        })
+                        props.onAdd("add", row).then((result) => {
+                            if (result != undefined && result.success) {
+                                setImportCount(importCount + 1)
+                                setImportState({
+                                    message: "导入成功",
+                                    description: '',
+                                    type: 'success'
+                                })
+                            } else {
+                                stopImport = true
+                                setImportState({
+                                    message: "导入出错",
+                                    description: result.message,
+                                    type: 'error'
+                                })
+                            }
+                        })
+                    }
+                }
+            } else
+                break
+        }
+    }
     function importData() {
         return (
             <>
                 <Row gutter={[16, 16]}><Col span={24}>
-                    <Title level={4}>数据导入中，总需要导入{rowcount}行，已导入{importCount}行</Title>
+                    <Alert showIcon message={`数据导入中，总需要导入${rowcount}行，已导入${importCount}行`} type={"info"}
+                        action={
+                            <Space>
+                                <Button size="small" type="primary" onClick={() => startImportData()}>开始</Button>
+                                <Button size="small" danger type="ghost">清除</Button>
+                            </Space>
+                        }
+                    />
                 </Col></Row>
                 <Row gutter={[16, 16]}><Col span={24}>
-                    <Progress percent={(importCount % rowcount) * 100} status="active"/>
+                    <Progress percent={(importCount % rowcount) * 100} status="active" />
                 </Col></Row>
                 <Row gutter={[16, 16]}><Col span={24}>
                     <Alert
-                        message="Success Text"
-                        description="Success Description Success Description Success Description"
-                        type="success"
+                        message={importState.message}
+                        description={importState.description}
+                        type={importState.type}
                     />
                 </Col></Row>
             </>)
     }
     function render() {
-        return (<WayStepFrom isModal={true} isShow={isshow} stepItem={stepItem()} currentStep={currentStep}
-            onChange={(current) => {
-                setCurrentStep(current)
-                switch (current) {
-                    case 0:
-                        break
-                    case 1:
-                        break
-                    case 2:
-                        break
-                    case 3:
-                        break
-
-                }
-            }}
+        return (<WayStepFrom title={`导入${props.title}数据`} isModal={true} isShow={isshow} stepItem={stepItem()} currentStep={currentStep}
             onCurrentStepComponent={(current) => {
                 if (current == 0)
                     return (getUpfile())
@@ -201,7 +258,7 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
                     return (mapFileToData())
                 if (current == 2)
                     return (importData())
-                return(<></>)
+                return (<></>)
             }}
         ></WayStepFrom>)
     }

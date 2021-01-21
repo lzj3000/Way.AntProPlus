@@ -9,6 +9,7 @@ import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { isArray } from 'lodash';
 import { PageLoading } from '@ant-design/pro-layout';
+import ImportForm from '../WayTable/importform';
 
 interface WayPageProps {
     namespace?: string
@@ -24,8 +25,9 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const [keys, setKeys] = useState([])
     const [model, setModel] = useState<ModelAttribute | undefined>(undefined)
     const [data, setData] = useState({ rows: [], total: 0 })
+    const [importShow, setImportShow] = useState(false)
     var form: FormPlus = null
-    
+
     useEffect(() => {
         setModel(undefined)
         setValues(null)
@@ -36,7 +38,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }, [props.controller])
 
     if (model == undefined) { return (<></>) }
-    
+
     function init() {
         console.log('waypage.init')
         props.init().then((result) => {
@@ -111,6 +113,11 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         return (<WayToolbar attrs={model?.commands} isselectrow={true} selectcount={selectCount}
             commandShow={true}
             onClick={(name: string, command: CommandAttribute) => {
+                console.log(name)
+                if (name == 'ImportData') {
+                    setImportShow(true)
+                    return;
+                }
                 if (name == 'edit' || name == 'add') {
                     if (form != null) {
                         form.clear()
@@ -183,6 +190,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             <Row gutter={[16, 16]}><Col span={24}>{renderToolbar()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderTable()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderForm()}</Col></Row>
+            <ImportForm title={props.title} isShow={importShow} attr={model} onAdd={props.execute}></ImportForm>
         </PageHeaderWrapper>)
     }
     return (render())
@@ -224,4 +232,4 @@ function mapDispatchToProps(dispatch: any, ownProps: WayPageProps) {
         },
     }
 }
-export default connect(()=>{}, mapDispatchToProps)(WayPage);
+export default connect(() => { }, mapDispatchToProps)(WayPage);
