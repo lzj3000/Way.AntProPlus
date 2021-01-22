@@ -7,6 +7,7 @@ import DragModal from './window';
 
 const { Step } = Steps;
 
+
 interface WayStepFromProps {
     attr?: ModelAttribute
     title?: string,
@@ -15,6 +16,7 @@ interface WayStepFromProps {
     isCard?: boolean,
     isModal?: boolean,
     isShow?: boolean,
+    closeOk?: boolean,
     onChange?: (current: number) => void;
     onCurrentStepComponent?: (current: number) => React.ReactDOM
     onShowChange?: (isshow: boolean) => void;
@@ -28,7 +30,11 @@ const WayStepFrom: React.FC<WayStepFromProps> = (props) => {
     }, [props.isShow])
     useEffect(() => {
         setCurrentStep(props.currentStep ?? 0)
+        if (props.onChange) {
+            props.onChange(props.currentStep ?? 0)
+        }
     }, [props.currentStep])
+
     function getCurrentStepAndComponent(current: number) {
         if (props.onCurrentStepComponent)
             return props.onCurrentStepComponent(current)
@@ -45,15 +51,29 @@ const WayStepFrom: React.FC<WayStepFromProps> = (props) => {
                 return (<Step {...item} />)
             })}
         </Steps>
-        <Divider />
+            <Divider />
             {getCurrentStepAndComponent(currentStep)}
         </>)
     }
+    function showChange(show: boolean) {
+        setModalShow(show)
+        if (props.onShowChange)
+            props.onShowChange(show)
+    }
     function render() {
         if (props.isModal) {
-            return (<DragModal title={props.title} width={900} visible={isshow} onCancel={() => setModalShow(false)} onOk={() => {
-
-            }}>
+            var mprop = {
+                onOk: () => {
+                    showChange(false)
+                },
+                onCancel: () => {
+                    showChange(false)
+                }
+            }
+            if (props.closeOk) {
+                mprop.footer = false
+            }
+            return (<DragModal maskClosable={false} destroyOnClose={true} title={props.title} width={900} visible={isshow} {...mprop}>
                 {renderSteps()}
             </DragModal>)
         }

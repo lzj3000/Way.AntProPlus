@@ -15,6 +15,7 @@ export interface FormPlus extends FormInstance<any> {
     setValues: (values: any) => void,
     show: () => void,
     clear: () => void,
+    hide:()=>void,
     setHideSearch: (isshow: boolean) => void,
     setHideToolbar: (isshow: boolean) => void,
     onFinish?: (values: any) => void

@@ -28,6 +28,8 @@ export interface WayTableProps {
     onMouseLeave?: (event: React.MouseEvent<HTMLElement, MouseEvent>, row: object) => void,
     onRowDataChangeing?: (row: any, field: string, value: any) => boolean,
     onExpandedRowTabPane?: (childmodel: ChildModelAttribute, record: any) => JSX.Element
+    onColumnToEdit?: (field: WayFieldAttribute, row: any) => JSX.Element
+    onGetFieldToEdit?: (field: WayFieldAttribute, row: any) => WayFieldAttribute
 }
 
 const TabPane = Tabs.TabPane
@@ -77,6 +79,12 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             return <>{data}</>
         }
         function columnToEdit(item: any, record: any) {
+            if (props.onColumnToEdit) {
+                return props.onColumnToEdit(item, record)
+            }
+            if (props.onGetFieldToEdit) {
+                item = props.onGetFieldToEdit(item, record)
+            }
             const [editvalue, setEditValue] = useState(record[item.field])
             return <WayTextBox attr={item} value={editvalue} onChange={(value) => {
                 if (props.onRowDataChangeing != undefined) {
@@ -85,6 +93,11 @@ const WayTable: React.FC<WayTableProps> = (props) => {
                 record[item.field] = value
                 setEditValue(value)
             }}
+                onSearchValueChange={(obj) => {
+                    // if (item.foreign?.isfkey) {
+                    //     record[obj.rowfield] = obj.row
+                    // }
+                }}
                 onSearchBefore={(item: SearchItem, callback) => {
                     if (props.onSearchData) {
                         props.onSearchData(item, (data) => {

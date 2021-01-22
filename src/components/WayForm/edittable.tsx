@@ -1,6 +1,6 @@
 import { Card, Col, Modal, Row } from "antd"
 import React, { useEffect, useState } from "react"
-import { ChildModelAttribute, CommandAttribute, SearchItem, SearchWhere, TableData } from "../Attribute"
+import { ChildModelAttribute, CommandAttribute, SearchItem, SearchWhere, TableData, WayFieldAttribute } from "../Attribute"
 import WayTable from "../WayTable"
 import WayToolbar from "../WayToolbar"
 import moment from 'moment';
@@ -19,6 +19,7 @@ interface WayEditTableProps {
     modelshow?: boolean,
     isselect?: boolean,
     selectType?: string,
+    closecard?: boolean,
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void
     onAddRowing?: (row: any) => boolean,
     onAdded?: (row: any) => void,
@@ -30,6 +31,8 @@ interface WayEditTableProps {
     onCommandClicking?: (command: CommandAttribute) => void,
     onCommandClicked?: (command: CommandAttribute) => void,
     onModalChange?: (isshow: boolean, row: any) => void,
+    onColumnToEdit?: (field: WayFieldAttribute, row: any) => JSX.Element
+    onGetFieldToEdit?: (field: WayFieldAttribute, row: any) => WayFieldAttribute
 }
 const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     const [selectKeys, setSelectKeys] = useState([])
@@ -181,7 +184,12 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                     setSelectKeys(keys)
                     setSelectRow(row)
                 }}
-                onSearchData={(item) => {
+                onSearchData={(item, callback) => {
+                    if (item.foreign && item.field) {
+                        if (props.onSearchData)
+                            props.onSearchData(item, callback)
+                        return
+                    }
                     searchItem.page = item.page
                     searchItem.size = item.size
                     searchItem.sortList = item.sortList
@@ -208,6 +216,8 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                         modalChange(false, record)
                     }
                 }}
+                onGetFieldToEdit={props.onGetFieldToEdit}
+                onColumnToEdit={props.onColumnToEdit}
             ></WayTable>
         )
     }
@@ -224,6 +234,12 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                 </Card>
             </DragModal>)
         } else {
+            if (props.closecard) {
+                return (<>
+                    {renderToolbar()}
+                    {renderTable()}</>
+                )
+            }
             return (<Card>
                 {renderToolbar()}
                 {renderTable()}

@@ -26,7 +26,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const [model, setModel] = useState<ModelAttribute | undefined>(undefined)
     const [data, setData] = useState({ rows: [], total: 0 })
     const [importShow, setImportShow] = useState(false)
-    var form: FormPlus = null
+    const [form,setForm]=useState<FormPlus>(null)
 
     useEffect(() => {
         setModel(undefined)
@@ -53,7 +53,6 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         })
     }
     function searchDataThan(item: SearchItem, callback: (data: TableData) => void) {
-        setLoading(true)
         console.log(item)
         if (item.foreign == undefined && item.childmodel == undefined)
             setSelectCount(0)
@@ -114,7 +113,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             commandShow={true}
             onClick={(name: string, command: CommandAttribute) => {
                 console.log(name)
-                if (name == 'ImportData') {
+                if (name == 'add') {
                     setImportShow(true)
                     return;
                 }
@@ -140,6 +139,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             searchShow={{
                 fields: model?.fields?.filter(f => f.issearch ?? true),
                 onSearch: (w: SearchWhere) => {
+                    setLoading(true)
                     if (w != undefined) {
                         if (isArray(w)) {
                             searchItem.whereList = w
@@ -164,12 +164,13 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                     setValues(row)
                 }}
                 onSearchData={(item, callback) => {
-                    if (item.parent && item.childmodel) {
+                    if (item.parent && item.childmodel) {//子表查询
                         searchDataThan(item, (data) => {
                             callback(data)
                         })
                         return
                     }
+                    setLoading(true)
                     item.whereList = searchItem.whereList
                     searchDataThan(item, (data) => {
                         setData(data)
@@ -180,7 +181,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }
     function renderForm() {
         return (
-            <WayForm attr={model} title={props.title} ismodal={true} onInitFormed={(f) => { form = f }}
+            <WayForm attr={model} title={props.title} ismodal={true} onInitFormed={(f) => { setForm(f) }}
                 onSearchData={searchDataThan}
             ></WayForm>
         )
@@ -190,7 +191,10 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             <Row gutter={[16, 16]}><Col span={24}>{renderToolbar()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderTable()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderForm()}</Col></Row>
-            <ImportForm title={props.title} isShow={importShow} attr={model} onAdd={props.execute}></ImportForm>
+            <ImportForm title={props.title} isShow={importShow} attr={model} onAdd={props.execute} form={form}
+             onShowChange={setImportShow}
+             onSearchData={searchDataThan}
+             ></ImportForm>
         </PageHeaderWrapper>)
     }
     return (render())
