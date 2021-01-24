@@ -8,7 +8,7 @@
 export default {
   dev: {
     '/api/': {
-      target: 'https://transport.ff36.cn',
+      target: 'https://localhost:5002',
       changeOrigin: true,
       secure: false,
       pathRewrite: { '^': '' },

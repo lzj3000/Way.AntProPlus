@@ -10,6 +10,7 @@ import { CloseCircleOutlined } from '@ant-design/icons';
 import { isArray } from 'lodash';
 import { PageLoading } from '@ant-design/pro-layout';
 import ImportForm from '../WayTable/importform';
+import { pageExportExcel } from '../WayTable/exportform';
 
 interface WayPageProps {
     namespace?: string
@@ -26,8 +27,14 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     const [model, setModel] = useState<ModelAttribute | undefined>(undefined)
     const [data, setData] = useState({ rows: [], total: 0 })
     const [importShow, setImportShow] = useState(false)
-    const [form,setForm]=useState<FormPlus>(null)
-
+    const [form, setForm] = useState<FormPlus>(null)
+    const [searchItem, setSearchItem] = useState<SearchItem>({
+        page: 1,
+        size: 10,
+        whereList: [],
+        sortList: []
+    })
+    const [current, setCurrent] = useState(1)
     useEffect(() => {
         setModel(undefined)
         setValues(null)
@@ -57,24 +64,23 @@ const WayPage: React.FC<WayPageProps> = (props) => {
         if (item.foreign == undefined && item.childmodel == undefined)
             setSelectCount(0)
         props.search(item).then(result => {
-            console.log(result)
+            //console.log(result)
             setLoading(false)
             if (result != undefined && result.success) {
                 if (result.data.rows == null)
                     result.data.rows = []
-                callback(result.data)
+                if (callback)
+                    callback(result.data)
+                else {
+                    setData(result.data)
+                }
             } else {
                 resultMessage(result.message)
             }
         })
     }
 
-    var searchItem: SearchItem = {
-        page: 1,
-        size: 10,
-        whereList: [],
-        sortList: [],
-    }
+
 
     const executeCommand = (command: CommandAttribute) => {
         var item = null
@@ -113,8 +119,12 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             commandShow={true}
             onClick={(name: string, command: CommandAttribute) => {
                 console.log(name)
-                if (name == 'add') {
+                if (name == 'ImportData') {
                     setImportShow(true)
+                    return;
+                }
+                if (name == 'ExportData') {
+                    pageExportExcel(model, data.total, searchItem, props.search, props.title + ".xlsx")
                     return;
                 }
                 if (name == 'edit' || name == 'add') {
@@ -140,14 +150,17 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                 fields: model?.fields?.filter(f => f.issearch ?? true),
                 onSearch: (w: SearchWhere) => {
                     setLoading(true)
+                    var item = { page: 1, whereList: [] }
                     if (w != undefined) {
                         if (isArray(w)) {
-                            searchItem.whereList = w
-                        } else
-                            searchItem.whereList = [w]
+                            item.whereList = w
+                        } else {
+                            item.whereList = [w]
+                        }
                     }
-                    searchItem.page = 1
-                    searchDataThan(searchItem, (data) => {
+                    setSearchItem(item)
+                    setCurrent(1)
+                    searchDataThan(item, (data) => {
                         setData(data)
                     })
                 },
@@ -157,7 +170,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
     }
     function renderTable() {
         return (
-            <WayTable attr={model} data={data} isselect={true} isexpandable={true} loading={loading}
+            <WayTable attr={model} data={data} isselect={true} isexpandable={true} loading={loading} current={current}
                 onSelectRows={(row, keys, selected) => {
                     setKeys(keys)
                     setSelectCount(keys.length)
@@ -171,6 +184,7 @@ const WayPage: React.FC<WayPageProps> = (props) => {
                         return
                     }
                     setLoading(true)
+                    setCurrent(item.page)
                     item.whereList = searchItem.whereList
                     searchDataThan(item, (data) => {
                         setData(data)
@@ -192,16 +206,20 @@ const WayPage: React.FC<WayPageProps> = (props) => {
             <Row gutter={[16, 16]}><Col span={24}>{renderTable()}</Col></Row>
             <Row gutter={[16, 16]}><Col span={24}>{renderForm()}</Col></Row>
             <ImportForm title={props.title} isShow={importShow} attr={model} onAdd={props.execute} form={form}
-             onShowChange={setImportShow}
-             onSearchData={searchDataThan}
-             ></ImportForm>
+                onShowChange={(show)=>{
+                    setImportShow(show)
+                    if(!show){
+                        searchDataThan(searchItem)
+                    }
+                }}
+                onSearchData={searchDataThan}
+            ></ImportForm>
         </PageHeaderWrapper>)
     }
     return (render())
 }
 
 function mapDispatchToProps(dispatch: any, ownProps: WayPageProps) {
-    console.log('waypage.mapDispatchToProps')
     var typens = 'waydefault'
     if (ownProps.namespace != undefined)
         typens = ownProps.namespace

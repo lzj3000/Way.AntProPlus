@@ -220,6 +220,8 @@ const WayTextBox: React.FC<WayTextBoxProps> = (props) => {
                 if (props.onSearchBefore != undefined) {
                     var item = { foreign: props.attr?.foreign, value: value, field: props.attr }
                     props.onSearchBefore(item, (model, data) => {
+                        if (model.title == undefined || model.title == "")
+                            model.title = props.attr?.title
                         setSearchModal({
                             isshow: true,
                             model: model,

@@ -1,8 +1,7 @@
-import { InboxOutlined, UploadOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Checkbox, Col, message, Modal, Progress, Row, Space, Upload } from 'antd';
-import { StepProps } from 'antd/lib/steps';
+import { ExclamationCircleOutlined, InboxOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Col, message, Modal, Progress, Row, Space } from 'antd';
 import React, { useEffect, useState } from 'react';
-import WayStepFrom, { WayStepProps } from '../WayForm/stepform';
+import WayStepFrom from '../WayForm/stepform';
 import { Typography } from 'antd';
 import WayTable from '.';
 import { ModelAttribute, SearchItem, TableData, WayFieldAttribute } from '../Attribute';
@@ -10,6 +9,8 @@ import WayEditTable from '../WayForm/edittable';
 import * as XLSX from 'xlsx';
 import Dragger from 'antd/lib/upload/Dragger';
 import { FormPlus } from '../WayForm';
+import { exportExcel } from './exportform'
+import { StepProps } from 'antd/lib/steps';
 
 const { Title } = Typography;
 
@@ -29,30 +30,30 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
     const [rowcount, setRowCount] = useState(0)
     const [sourceTable, setSourceTable] = useState({ model: undefined, data: { rows: [], total: 0 } })
     const [targetFields, setTargetFields] = useState<WayFieldAttribute[]>(filterfields(props.attr))
-    const [importCount, setImportCount] = useState(0)
     const [importState, setImportState] = useState({
         message: '',
         description: '',
-        type: 'success'
+        type: 'success',
+        count: 0
     })
     const [upfileResult, setUpfileResult] = useState(null)
-
     const [sourceTotargetMapTable, setSourceTotargetMapTable] = useState({
         model: null,
         rows: [],
         total: 0
     })
-    const [stopImport, setStopImport] = useState(false)
+    const [stopImport, setStopImport] = useState(true)
+    const [fieldMap, setFmap] = useState(undefined)
 
     function clearstate() {
         setCurrentStep(0)
         setRowCount(0)
         setSourceTable({ model: undefined, data: { rows: [], total: 0 } })
-        setImportCount(0)
         setImportState({
             message: '',
             description: '',
-            type: 'success'
+            type: 'success',
+            count: 0
         })
         setUpfileResult(null)
         setSourceTotargetMapTable({
@@ -60,7 +61,8 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
             rows: [],
             total: 0
         })
-        setStopImport(false)
+        setStopImport(true)
+        setFmap(undefined)
     }
     function filterfields(attr) {
         return attr.fields?.filter((field) => { return field.visible && !field.disabled })
@@ -71,11 +73,19 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
     useEffect(() => {
         setTargetFields(filterfields(props.attr))
     }, [props.attr])
+
+    const waitTime = (time: number = 100) => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(true);
+            }, time);
+        });
+    };
     function stepItem() {
-        var step1: WayStepProps = { title: "上传导入文件" }
-        var step2: WayStepProps = { title: "设置导入映射" }
-        var step3: WayStepProps = { title: "导入数据" }
-        var items: WayStepProps[] = [step1, step2, step3]
+        var step1: StepProps = { title: "上传导入文件" }
+        var step2: StepProps = { title: "设置导入映射" }
+        var step3: StepProps = { title: "导入数据" }
+        var items: StepProps[] = [step1, step2, step3]
         return items
     }
     function getattr(table: any[]): ModelAttribute {
@@ -90,7 +100,7 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
     function setshowtable(result) {
         const { rowcount, data } = result
         if (rowcount > 0) {
-            setRowCount(rowcount - 1)
+            setRowCount(rowcount)
             var m = getattr(data)
             var rows = []
             for (var i = 0; i < 6; i++) {
@@ -102,7 +112,7 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
 
 
     function mapFileToData() {
-        if (sourceTotargetMapTable.model != null) return
+        //if (sourceTotargetMapTable.model != null) return
         var sourceItems = new Map<number, string>()
         var targetItems = new Map<number, string>()
         sourceTable.model?.fields?.forEach((field, index) => {
@@ -132,7 +142,7 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
         })
         var items = [
             { field: "source", title: "来源列名", type: "string", comvtp: { isvtp: true, items: sourceItems }, visible: true, sorter: false },
-            { field: "target", title: "目标列名", type: "string", comvtp: { isvtp: true, items: targetItems }, visible: true, sorter: false },
+            { field: "target", title: "目标列名", type: "string", comvtp: { isvtp: true, items: targetItems }, visible: true, sorter: false, isedit: false },
             { field: "defaultValue", title: "默认值", type: "string", visible: true, sorter: false },
             { field: "foreignMap", title: "外关联映射", type: "string", visible: true, sorter: false }
         ]
@@ -158,10 +168,22 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
                 row = {}
             if (stmap.defaultValue != null && stmap.defaultValue != "") {
                 row[titem.field] = stmap.defaultValue
+                if (titem.foreign?.isfkey) {
+                    row[titem.field] = stmap[titem.field]
+                }
                 continue
             }
             var sn = sfield.field
-            var value = stmap.defaultValue == "" ? excelRow[sn] : stmap.defaultValue
+            var value = excelRow[sn]
+            if (titem.required) {
+                if (value == undefined || value == null || value == "") {
+                    importError(row, `导入数据${sfield.field}为空值，映射项${titem.title}不能为空，请修改Excel后重试！`, 0)
+                    return
+                }
+            }
+            if (value == undefined || value == null || value == "") {
+                continue
+            }
             if (titem?.comvtp && titem.comvtp.isvtp) {
                 for (let item of titem.comvtp.items.entries()) {
                     if (value == item[1]) {
@@ -170,11 +192,97 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
                     }
                 }
             }
+            if (titem.foreign?.isfkey && fieldMap != undefined) {
+                if (fieldMap.has(titem.field)) {
+                    var vnmap = fieldMap.get(titem.field)
+                    value = vnmap[value]
+                }
+            }
             row[titem.field] = value
         }
         return row
     }
-    function startImportData() {
+    function getForeignValueMap(excelRows) {
+        var fmap = new Map<string, Map<string, string>>()
+        for (var ii in sourceTotargetMapTable.rows) {
+            var stmap = sourceTotargetMapTable.rows[ii]
+            var sfield = sourceTable.model?.fields[stmap.source]
+            if (sfield == undefined || sfield == null)
+                continue
+            var field = targetFields[stmap.target]
+            var fname = stmap.foreignMap == "" ? "Name" : stmap.foreignMap
+            if (field.foreign?.isfkey && stmap.defaultValue == "") {
+                if (!fmap.has(field.field))
+                    fmap.set(field.field, new Map<string, string>())
+                var vmap = fmap.get(field.field)
+                for (var r in excelRows) {
+                    var row = excelRows[r]
+                    var value = row[sfield.field]
+                    if (value != null && value != "" && !vmap.has(value)) {
+                        vmap?.set(value, fname)
+                    }
+                }
+            }
+        }
+        return fmap
+    }
+    function searchForeignValueMap(excelRows) {
+        var fmap = getForeignValueMap(excelRows)
+        if (fmap.size == 0) {
+            setStopImport(false)
+            setImportState({ message: "请点击开始导入", description: "导入数据准备完成......", type: 'info', count: 0 })
+            return
+        }
+        var errmsg = ''
+        fmap.forEach((vnmap, key) => {
+            var field = targetFields.find(f => f.field == key)
+            var symbol = targetFields.find(f => f.type == 'string').searchsymbol.find((f => f.label == '等于')).value
+            var list = []
+            var fv = ""
+            vnmap.forEach((v, k) => {
+                fv = v.toLowerCase()
+                list.push({ name: v, symbol: symbol, value: k, relation: "||" })
+            })
+            var searchItem = { field: field, foreign: field.foreign, whereList: list }
+            if (props.onSearchData) {
+                waitTime(200)
+                props.onSearchData(searchItem, (data) => {
+                    if (data && data.rows.length > 0) {
+                        if (data.rows.length == vnmap.size) {
+                            console.log(vnmap)
+                            for (var r in data.rows) {
+                                var rowname = data.rows[r][fv]
+                                if (vnmap.has(rowname))
+                                    vnmap[rowname] = data.rows[r].id
+                            }
+                            setFmap(fmap)
+                            setStopImport(false)
+                            console.log(importState.description)
+                            setImportState({
+                                message: "请点击开始导入",
+                                description: `导入数据准备完成,已映射${field?.title}数据${data.total}项。\n`,
+                                type: 'info',
+                                count: 0
+                            })
+                        } else {
+                            vnmap.forEach((vv, kk) => {
+                                var row = data.rows.find(r => r[fv] == kk)
+                                errmsg += `${field?.title}中未找到${fv}为${kk}的数据，请修改Excel后重试!\n`
+                                if (row == null) {
+                                    importError(data.rows, errmsg, 0)
+                                }
+                            })
+                        }
+                    } else {
+                        errmsg += `${field?.title}中未找到${fv}为${list[0].value}的数据，请修改Excel后重试!\n`
+                        importError(data.rows, errmsg, 0)
+                    }
+                })
+            }
+        })
+    }
+
+    function startImportData(count) {
         if (upfileResult == null || upfileResult.data == undefined) {
             Modal.error({
                 content: <div>导入数据未上传，不能导入！</div>
@@ -188,41 +296,58 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
             })
             return
         }
-        for (var i = importCount; i < data.length; i++) {
-            if (stopImport) break
-            var row = mapExcelToData(data[i])
-            if (row != null) {
-                if (!submitData(row))
-                    break
-            }
+        if (stopImport) return
+        if (count == data.length) {
+            setImportState({ message: "导入数据完成", description: "", type: 'success', count: count })
+            setStopImport(true)
+            return
+        }
+        var row = mapExcelToData(data[count])
+        if (row != null) {
+            submitData(row, (success, err) => {
+                backcall(row, success, err, count)
+            })
         }
     }
-    function submitData(row: any) {
+    function backcall(row, success, err, count) {
+        if (success) {
+            count++
+            setImportState({ message: "导入成功", description: JSON.stringify(row), type: 'success', count: count })
+            waitTime(200)
+            startImportData(count)
+        } else {
+            importError(row, err, count)
+        }
+    }
+    async function submitData(row: any, callback) {
         if (props.onAdd) {
-            setImportState({ message: "导入进行中", description: JSON.stringify(row), type: 'info' })
-            var result = props.onAdd("add", row)
-            if (result != undefined && result.success) {
-                setImportCount(importCount + 1)
-                setImportState({ message: "导入成功", description: JSON.stringify(row), type: 'success' })
-                return true
-            } else {
-                setStopImport(true)
-                importError(row, result.message)
-                return false
-            }
+            props.onAdd("add", row).then(async (result) => {
+                console.log(result)
+                if (result.ok != undefined && result.ok == false) {
+                    setStopImport(true)
+                    callback(false, result.statusText)
+                }
+                if (result != undefined && result.success) {
+                    await waitTime(200)
+                    callback(true)
+                } else {
+                    setStopImport(true)
+                    callback(false, result.message)
+                }
+            })
         }
     }
-    function importError(row, message) {
+
+    function importError(row, message, count) {
         var prop = {
             message: "导入出错:" + JSON.stringify(row),
             description: message,
             type: 'error',
+            count: count,
             action: (
                 <Space>
                     <Button size="small" type="ghost" onClick={() => {
-                        console.log("importform.edit")
                         if (props.form) {
-                            console.log("importform.edit1")
                             var form = props.form
                             form.clear()
                             form.setHideSearch(true)
@@ -232,10 +357,9 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
                             form.onFinish = (values) => {
                                 console.log(values)
                                 form.hide()
-                                if (submitData(values)) {
-                                    setStopImport(false)
-                                    startImportData()
-                                }
+                                submitData(values, (success, err) => {
+                                    backcall(values, success, err, count)
+                                })
                             }
                         }
                     }}>修改</Button>
@@ -286,7 +410,15 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
             <Row gutter={[8, 8]}><Col span={24}>
                 <Alert showIcon message={`上传文件中的数据为${rowcount}行`} type={"info"} action={
                     <Space>
-                        <Button size="small" type="primary" >下载导入模板</Button>
+                        <Button size="small" type="primary" onClick={() => {
+                            var columns = []
+                            var row = {}
+                            targetFields.forEach((item) => {
+                                columns.push({ title: item.title, key: item.field })
+                                row[item.field] = item.type + "(数据类型提示，录入数据时请删除)"
+                            })
+                            exportExcel(columns, [row], props.title + "导入模板.xlsx")
+                        }} >下载导入模板</Button>
                     </Space>
                 } />
             </Col>
@@ -321,21 +453,18 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
                 if (field.field == 'defaultValue') {
                     var index = row["target"]
                     var tfield = targetFields[index]
-                    //tfield.field = field.field
                     return tfield
                 }
                 return field
             },
-            onEditRowing: (row, field, value) => {
-                console.log(field)
-                var index = row["target"]
-                var tfield = targetFields[index]
-                if (field == tfield.field) {
-                    row['defaultValue'] = value
-                }
-                console.log(row)
-                console.log(value)
+            onEditRowing: (row: any, field: string, value: any) => {
+                if (value != undefined)
+                    row['defaultValue'] = String(value)
                 return true
+            },
+            onSearchValueChange: (field: WayFieldAttribute, row: any, foreignvalue: any) => {
+                if (foreignvalue.text != undefined)
+                    row['defaultValue'] = foreignvalue.text
             },
             onSearchData: props.onSearchData
         }
@@ -351,25 +480,39 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
         return (
             <>
                 <Row gutter={[16, 16]}><Col span={24}>
-                    <Alert message={`数据导入中，总需要导入${rowcount}行，已导入${importCount}行`} type="info" />
+                    <Alert message={`数据导入，总需要导入${rowcount}行，已导入${importState.count}行`} type="info" />
                 </Col></Row>
                 <Row gutter={[16, 16]}><Col span={24}>
-                    <Progress percent={(importCount % rowcount) * 100} status="active" />
+                    <Progress percent={parseInt(((importState.count / rowcount) * 100).toString())} status="active" />
                 </Col></Row>
                 <Row gutter={[16, 16]}><Col span={24}>
                     <Alert {...importState} />
                 </Col></Row>
                 <Row gutter={[8, 8]}>
-                    <Col span={12} push={10}><Button type="primary" disabled={stopImport} onClick={() => { startImportData() }}>开始导入</Button></Col>
+                    <Col span={12} push={10}><Button type="primary" disabled={stopImport} onClick={() => { startImportData(importState.count) }}>开始导入</Button></Col>
                     <Col span={12} push={1}><Button onClick={() => { setCurrentStep(currentStep - 1) }}>上一步</Button></Col>
                 </Row>
             </>)
+    }
+    function close(show) {
+        setModalShow(show)
+        if (props.onShowChange)
+            props.onShowChange(show)
+        if (!show) {
+            clearstate()
+        }
     }
     function render() {
         return (<WayStepFrom title={`导入${props.title}数据`} closeOk={true} isModal={true} isShow={isshow} stepItem={stepItem()} currentStep={currentStep}
             onChange={(current) => {
                 if (current == 1)
                     mapFileToData()
+                if (current == 2) {
+                    if (upfileResult && upfileResult.data) {
+                        const { data } = upfileResult
+                        searchForeignValueMap(data)
+                    }
+                }
                 setCurrentStep(current)
             }}
             onCurrentStepComponent={(current) => {
@@ -382,12 +525,17 @@ const ImportForm: React.FC<ImportFormProps> = (props) => {
                 return (<></>)
             }}
             onShowChange={(show) => {
-                setModalShow(show)
-                if (props.onShowChange)
-                    props.onShowChange(show)
-                if (!show) {
-                    clearstate()
-                }
+                // if (show == false && (importState.count > 0 && importState.count != rowcount)) {
+                //     Modal.confirm({
+                //         title: '确定关闭导入吗？',
+                //         icon: <ExclamationCircleOutlined />,
+                //         content: "数据导入正在进行中，关闭后将无法继续。",
+                //         onOk() {
+                //             close(show)
+                //         }
+                //     })
+                // } 
+                close(show)
             }}
         ></WayStepFrom>)
     }

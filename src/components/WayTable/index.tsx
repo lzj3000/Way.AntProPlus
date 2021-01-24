@@ -6,6 +6,29 @@ import { isArray } from 'lodash';
 import WayTextBox from '../WayTextBox';
 import moment, { isMoment } from 'moment';
 
+export function DefaultRowToDisplay(value: any, item: WayFieldAttribute, row: any) {
+    var data = value
+    if (item.comvtp?.isvtp) {
+        var mmap: Map<Number, string> = new Map(item.comvtp.items)
+        data = mmap.get(value)
+    }
+    if (item.foreign?.isfkey) {
+        var oofiled = item.foreign.oneobjecfiled.toLocaleLowerCase()
+        var odname = item.foreign.onedisplayname.toLocaleLowerCase()
+        if (row[oofiled])
+            data = row[oofiled][odname]
+    }
+    if (item.type == 'boolean')
+        data = (data) ? "是" : "否"
+    if (item.type == 'datetime') {
+        var fm = 'YYYY-MM-DD'
+        if (item.title?.indexOf('时间') > -1) {
+            fm = 'YYYY-MM-DD hh:mm'
+        }
+        data = data != "" ? moment(data).format(fm).toString() : ""
+    }
+    return data
+}
 
 export interface WayTableProps {
     attr?: ChildModelAttribute,
@@ -17,6 +40,7 @@ export interface WayTableProps {
     isexpandable?: boolean,
     rowedit?: boolean,
     isclosecard?: boolean,
+    current?: number,
     onExpandable?: (attr: ChildModelAttribute) => ExpandableConfig<Object>
     onFieldRender?: (field: WayFieldAttribute, text: any, record: any) => JSX.Element,
     onSearchData?: (item: SearchItem, callback: (data: TableData) => void) => void,
@@ -30,6 +54,7 @@ export interface WayTableProps {
     onExpandedRowTabPane?: (childmodel: ChildModelAttribute, record: any) => JSX.Element
     onColumnToEdit?: (field: WayFieldAttribute, row: any) => JSX.Element
     onGetFieldToEdit?: (field: WayFieldAttribute, row: any) => WayFieldAttribute
+    onSearchValueChange?: (field: WayFieldAttribute, row: any, foreignvalue: any) => void
 }
 
 const TabPane = Tabs.TabPane
@@ -38,7 +63,8 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     const [loading, setLoading] = useState(props.loading ?? false)
     const [data, setData] = useState(props.data ?? { rows: [], total: 0 })
     const [rowedit, setRowedit] = useState(props.rowedit ?? false)
-    const [current, setCurrent] = useState(1)
+    const [current, setCurrent] = useState(props.current ?? 1)
+    const [currentSize, setCurrentSize] = useState(10)
 
     useEffect(() => {
         setData(props.data ?? { rows: [], total: 0 })
@@ -50,29 +76,13 @@ const WayTable: React.FC<WayTableProps> = (props) => {
     useEffect(() => {
         setLoading(props.loading ?? false)
     }, [props.loading])
+    useEffect(() => {
+        setCurrent(props.current ?? 1)
+    }, [props.current])
     const getColumns = (attr: ModelAttribute) => {
         var cols: any = []
         function columnToDisplay(text: any, item: WayFieldAttribute, record: any) {
-            var data = text
-            if (item.comvtp?.isvtp) {
-                var mmap: Map<Number, string> = new Map(item.comvtp.items)
-                data = mmap.get(text)
-            }
-            if (item.foreign?.isfkey) {
-                var oofiled = item.foreign.oneobjecfiled.toLocaleLowerCase()
-                var odname = item.foreign.onedisplayname.toLocaleLowerCase()
-                if (record[oofiled])
-                    data = record[oofiled][odname]
-            }
-            if (item.type == 'boolean')
-                data = (data) ? "是" : "否"
-            if (item.type == 'datetime') {
-                var fm = 'YYYY-MM-DD'
-                if (item.title?.indexOf('时间') > -1) {
-                    fm = 'YYYY-MM-DD hh:mm'
-                }
-                data = data != "" ? moment(data).format(fm).toString() : ""
-            }
+            var data = DefaultRowToDisplay(text, item, record)
             if (props.onFieldRender != undefined) {
                 return props.onFieldRender(item, data, record)
             }
@@ -94,9 +104,9 @@ const WayTable: React.FC<WayTableProps> = (props) => {
                 setEditValue(value)
             }}
                 onSearchValueChange={(obj) => {
-                    // if (item.foreign?.isfkey) {
-                    //     record[obj.rowfield] = obj.row
-                    // }
+                    if (props.onSearchValueChange) {
+                        props.onSearchValueChange(item, record, obj)
+                    }
                 }}
                 onSearchBefore={(item: SearchItem, callback) => {
                     if (props.onSearchData) {
@@ -112,7 +122,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             cols.push({
                 dataIndex: item.field, title: item.title, sorter: item.sorter ?? true, render: (text: any, record: any) => {
                     if (record == undefined) return
-                    if (rowedit && record.editable) {
+                    if (rowedit && record.editable && (item.isedit == undefined || item.isedit == true)) {
                         return columnToEdit(item, record)
                     } else {
                         return columnToDisplay(text, item, record)
@@ -136,6 +146,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
         }
         setLoading(true)
         setCurrent(pagination.current ?? 1)
+        setCurrentSize(pagination.pageSize ?? 10)
         try {
             var item: SearchItem = {
                 page: pagination.current ?? 1,
@@ -335,7 +346,7 @@ const WayTable: React.FC<WayTableProps> = (props) => {
             rowSelection={rowSelection()}
             scroll={{ x: columns.length * 150 }}
             dataSource={data.rows}
-            pagination={{ current: current, pageSize: 10, total: data.total, hideOnSinglePage: true }}
+            pagination={{ current: current, pageSize: currentSize, total: data.total, hideOnSinglePage: true,showTotal:(total => `总 ${total} 行`) }}
             loading={loading}
             expandable={expandable()}
             onChange={handleTableChange}

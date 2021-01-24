@@ -67,12 +67,6 @@ export default defineConfig({
               component: './transport',
             },
             {
-              name: 'system',
-              icon: 'smile',
-              path: '/waypage/:path/:type',
-              component: './WayPages',
-            },
-            {
               name: 'settings',
               icon: 'smile',
               path: '/account/settings',
@@ -142,7 +136,7 @@ export default defineConfig({
   theme: {
     'primary-color': defaultSettings.primaryColor,
   },
-  title: false,
+  title: '运输管理系统',
   ignoreMomentLocale: true,
   proxy: proxy[REACT_APP_ENV || 'dev'],
   manifest: {

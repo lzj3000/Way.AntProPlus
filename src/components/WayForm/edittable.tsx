@@ -33,6 +33,7 @@ interface WayEditTableProps {
     onModalChange?: (isshow: boolean, row: any) => void,
     onColumnToEdit?: (field: WayFieldAttribute, row: any) => JSX.Element
     onGetFieldToEdit?: (field: WayFieldAttribute, row: any) => WayFieldAttribute
+    onSearchValueChange?: (field: WayFieldAttribute, row: any, foreignvalue: any) => void
 }
 const WayEditTable: React.FC<WayEditTableProps> = (props) => {
     const [selectKeys, setSelectKeys] = useState([])
@@ -218,6 +219,14 @@ const WayEditTable: React.FC<WayEditTableProps> = (props) => {
                 }}
                 onGetFieldToEdit={props.onGetFieldToEdit}
                 onColumnToEdit={props.onColumnToEdit}
+                onSearchValueChange={(field, row, foreignvalue) => {
+                    if (row.isnew) {
+                        row[foreignvalue.rowfield] = foreignvalue.row
+                    }
+                    if (props.onSearchValueChange) {
+                        props.onSearchValueChange(field, row, foreignvalue)
+                    }
+                }}
             ></WayTable>
         )
     }

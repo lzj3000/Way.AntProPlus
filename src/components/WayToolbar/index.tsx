@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Row, Col, Space, Menu, Divider, Card } from 'antd'
-import Icon, { DownOutlined, PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined, PrinterOutlined, QuestionOutlined, InfoOutlined, SettingOutlined, ExclamationCircleOutlined, SearchOutlined, RollbackOutlined, ClearOutlined, SaveOutlined, FastForwardFilled, WhatsAppOutlined } from '@ant-design/icons';
+import Icon, { DownOutlined, PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined, PrinterOutlined, QuestionOutlined, InfoOutlined, SettingOutlined, ExclamationCircleOutlined, SearchOutlined, RollbackOutlined, ClearOutlined, SaveOutlined, FastForwardFilled, WhatsAppOutlined,ImportOutlined,ExportOutlined } from '@ant-design/icons';
 import WayButton from './waybutton'
 import WayProSearch, { WayProSearchProps } from './wayprosearch'
 import { CommandAttribute, SearchItem, TableData } from '../Attribute';
@@ -51,6 +51,8 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
     var primaryKeys = ['add', 'create']
     var dangerKeys = ['remove', 'delete']
     var editKeys = ['update', 'edit']
+    var importKeys=['ImportData']
+    var exportKeys=['ExportData']
     function initcommands() {
         var mianButtons: CommandAttribute[] = []
         var splitButtons: Map<string, CommandAttribute[]> = new Map()
@@ -175,6 +177,12 @@ const WayToolbar: React.FC<WayToolbarProps> = (props) => {
         }
         if (editKeys.includes(prop.name)) {
             prop.icon = <EditOutlined />
+        }
+        if(importKeys.includes(prop.name)){
+            prop.icon = <ImportOutlined />
+        }
+        if(exportKeys.includes(prop.name)){
+            prop.icon = <ExportOutlined />
         }
         if (prop.icon == "") {
             prop.icon = <SyncOutlined />
