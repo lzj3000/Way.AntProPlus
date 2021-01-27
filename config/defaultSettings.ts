@@ -17,7 +17,6 @@ const proSettings: DefaultSettings = {
   pwa: false,
   iconfontUrl: '',
 };
-
 export type { DefaultSettings };
 
 export default proSettings;
