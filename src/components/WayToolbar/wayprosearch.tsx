@@ -43,10 +43,11 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
                 child = symbolType.get(item.type)
             }
             if (item.foreign && item.foreign.isfkey) {
-                if (child) {
-                    var c = child.find((f => f.label == '等于'))
-                    child = [c]
-                }
+                child = undefined
+                // if (child) {
+                //     var c = child.find((f => f.label == '等于'))
+                //     child = [c]
+                // }
             }
             option.push({ label: item.title, value: item.field, children: child })
         })
