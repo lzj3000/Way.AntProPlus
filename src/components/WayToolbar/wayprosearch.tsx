@@ -87,7 +87,7 @@ const WayProSearch: React.FC<WayProSearchProps> = (props) => {
     function renderButton() {
         return (<Button style={{ width: '15%' }} type={'primary'} icon={<SearchOutlined />} onClick={() => {
             var item = { name: nameType.name, symbol: nameType.symbol, value: text.value }
-            if (item.name == "*" && item.value == "")
+            if (item.value == "")
                 props.onSearch()
             else {
                 if (text.attr.type == 'datetime') {
